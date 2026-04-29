@@ -123,3 +123,28 @@ export async function actualizarContactosEmergencia(
   const { data } = await api.put<EstudianteResponse>(`/estudiantes/${id}/contactos-emergencia`, contactos)
   return data
 }
+
+export interface TelefonoInput {
+  numero: string
+  tipo: 'CASA' | 'CELULAR' | 'TRABAJO'
+}
+
+export interface CondicionMedicaInput {
+  descripcion: string
+}
+
+export interface AlergiaInput {
+  alergiaId: number
+  observaciones?: string | null
+}
+
+export interface DiscapacidadInput {
+  tipoDiscapacidadId: number
+  observaciones?: string | null
+}
+
+export interface ContactoEmergenciaInput {
+  nombreCompleto: string
+  parentesco: string
+  direccion?: string
+}
