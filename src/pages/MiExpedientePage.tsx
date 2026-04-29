@@ -1,9 +1,7 @@
 import { useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Pencil } from 'lucide-react'
 import { toast } from 'sonner'
-import { obtenerEstudiante } from '@/api/estudiantes'
+import { obtenerMiExpediente } from '@/api/estudiantes'
 import {
   actualizarTelefonos,
   actualizarCondicionesMedicas,
@@ -13,12 +11,10 @@ import {
 } from '@/api/estudiantes'
 import { listarCatalogo } from '@/api/catalogos'
 import { useAuth } from '@/hooks/useAuth'
-
-// ─── Tipos de input ───────────────────────────────────────────────────────────
 import type { AlergiaRequest, DiscapacidadRequest, ContactoEmergenciaRequest } from '@/types'
 
+// ─── Tipos de input ───────────────────────────────────────────────────────────
 type TipoTelefono = 'CASA' | 'CELULAR' | 'TRABAJO'
-
 interface TelefonoInput { numero: string; tipo: TipoTelefono }
 interface CondicionInput { descripcion: string }
 
@@ -29,23 +25,20 @@ const inputCls = 'w-full px-3 py-2 rounded-lg text-sm outline-none focus:ring-1'
 // ─── Página principal ─────────────────────────────────────────────────────────
 
 /**
- * Página de detalle/expediente completo de un estudiante.
- * Incluye edición de subentidades mediante modales para ADMIN y ESTUDIANTE.
+ * Página de expediente propio para el rol ESTUDIANTE.
+ * Carga el expediente usando GET /api/estudiantes/mi-expediente?usuarioId=
+ * y permite editar todas las subentidades mediante modales.
  */
-export default function EstudianteDetallePage() {
-  const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
-  const { tieneRol } = useAuth()
+export default function MiExpedientePage() {
+  const { sesion } = useAuth()
 
   type ModalId = 'telefonos' | 'condiciones' | 'alergias' | 'discapacidades' | 'contactos' | null
   const [modal, setModal] = useState<ModalId>(null)
 
-  const puedeEditar = tieneRol('ADMIN', 'ESTUDIANTE')
-
   const { data: est, isLoading } = useQuery({
-    queryKey: ['estudiante', id],
-    queryFn: () => obtenerEstudiante(Number(id)),
-    enabled: !!id,
+    queryKey: ['mi-expediente', sesion?.usuarioId],
+    queryFn: () => obtenerMiExpediente(sesion!.usuarioId),
+    enabled: !!sesion?.usuarioId,
   })
 
   if (isLoading) {
@@ -63,39 +56,20 @@ export default function EstudianteDetallePage() {
 
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => navigate('/estudiantes')}
-            className="flex items-center justify-center rounded-lg transition hover:opacity-70"
-            style={{ width: 32, height: 32, background: '#1e293b' }}
-          >
-            <ArrowLeft size={15} style={{ color: '#94a3b8' }} />
-          </button>
-          <div>
-            <h1 className="text-lg font-semibold" style={{ color: '#F4E9CD' }}>
-              {est.nombres} {est.apellidos}
-            </h1>
-            <p className="text-xs mt-0.5 font-mono" style={{ color: '#475569' }}>
-              {est.numeroCarne}
-            </p>
-          </div>
+        <div>
+          <h1 className="text-lg font-semibold" style={{ color: '#F4E9CD' }}>
+            Mi expediente
+          </h1>
+          <p className="text-xs mt-0.5 font-mono" style={{ color: '#475569' }}>
+            {est.numeroCarne}
+          </p>
         </div>
-        {tieneRol('ADMIN') && (
-          <button
-            onClick={() => navigate(`/estudiantes/${id}/editar`)}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition hover:opacity-90"
-            style={{ background: '#F4E9CD', color: '#0f172a' }}
-          >
-            <Pencil size={14} />
-            Editar
-          </button>
-        )}
       </div>
 
       {/* Grid de secciones */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
 
-        {/* Datos personales */}
+        {/* Datos personales — solo lectura */}
         <Seccion titulo="Datos personales">
           <Campo label="Nombres" valor={`${est.nombres} ${est.apellidos}`} />
           <Campo label="CUI" valor={est.cui} mono />
@@ -104,7 +78,7 @@ export default function EstudianteDetallePage() {
           <Campo label="Dirección" valor={est.direccion} />
         </Seccion>
 
-        {/* Datos académicos */}
+        {/* Datos académicos — solo lectura */}
         <Seccion titulo="Datos académicos">
           <Campo label="Carné" valor={est.numeroCarne} mono />
           <Campo label="Carrera" valor={est.carreraNombre} />
@@ -116,8 +90,8 @@ export default function EstudianteDetallePage() {
           )}
         </Seccion>
 
-        {/* Contacto — con botón editar teléfonos */}
-        <Seccion titulo="Contacto" onEditar={puedeEditar ? () => setModal('telefonos') : undefined}>
+        {/* Contacto — editable (teléfonos) */}
+        <Seccion titulo="Contacto" onEditar={() => setModal('telefonos')}>
           <Campo label="Correo institucional" valor={est.correoInstitucional} />
           {est.correoPersonal && <Campo label="Correo personal" valor={est.correoPersonal} />}
           {est.tipoSangreNombre && <Campo label="Tipo de sangre" valor={est.tipoSangreNombre} badge />}
@@ -130,8 +104,8 @@ export default function EstudianteDetallePage() {
           )}
         </Seccion>
 
-        {/* Información médica — con botón editar */}
-        <Seccion titulo="Información médica" onEditar={puedeEditar ? () => setModal('condiciones') : undefined}>
+        {/* Información médica — editable */}
+        <Seccion titulo="Información médica" onEditar={() => setModal('condiciones')}>
           {est.condicionesMedicas.length === 0 && est.alergias.length === 0 && est.discapacidades.length === 0 ? (
             <p className="text-xs" style={{ color: '#475569' }}>Sin registros médicos.</p>
           ) : (
@@ -147,19 +121,16 @@ export default function EstudianteDetallePage() {
               ))}
             </>
           )}
-          {/* Botones secundarios para alergias y discapacidades */}
-          {puedeEditar && (
-            <div className="flex gap-2 pt-1">
-              <BtnSecundario onClick={() => setModal('alergias')}>Editar alergias</BtnSecundario>
-              <BtnSecundario onClick={() => setModal('discapacidades')}>Editar discapacidades</BtnSecundario>
-            </div>
-          )}
+          <div className="flex gap-2 pt-1">
+            <BtnSecundario onClick={() => setModal('alergias')}>Editar alergias</BtnSecundario>
+            <BtnSecundario onClick={() => setModal('discapacidades')}>Editar discapacidades</BtnSecundario>
+          </div>
         </Seccion>
 
       </div>
 
-      {/* Contactos de emergencia — ancho completo, con botón editar */}
-      <Seccion titulo="Contactos de emergencia" onEditar={puedeEditar ? () => setModal('contactos') : undefined}>
+      {/* Contactos de emergencia — ancho completo, editable */}
+      <Seccion titulo="Contactos de emergencia" onEditar={() => setModal('contactos')}>
         {est.contactosEmergencia.length === 0 ? (
           <p className="text-xs" style={{ color: '#475569' }}>Sin contactos de emergencia registrados.</p>
         ) : (
@@ -182,35 +153,35 @@ export default function EstudianteDetallePage() {
       {/* ── Modales ── */}
       {modal === 'telefonos' && (
         <ModalTelefonos
-          estudianteId={Number(id)}
+          estudianteId={est.id}
           actuales={est.telefonos.map(t => ({ numero: t.numero, tipo: t.tipo as TipoTelefono }))}
           onClose={() => setModal(null)}
         />
       )}
       {modal === 'condiciones' && (
         <ModalCondiciones
-          estudianteId={Number(id)}
+          estudianteId={est.id}
           actuales={est.condicionesMedicas.map(c => ({ descripcion: c.descripcion }))}
           onClose={() => setModal(null)}
         />
       )}
       {modal === 'alergias' && (
         <ModalAlergias
-          estudianteId={Number(id)}
+          estudianteId={est.id}
           actuales={est.alergias.map(a => ({ alergiaId: a.alergiaId, observaciones: a.observaciones ?? undefined }))}
           onClose={() => setModal(null)}
         />
       )}
       {modal === 'discapacidades' && (
         <ModalDiscapacidades
-          estudianteId={Number(id)}
+          estudianteId={est.id}
           actuales={est.discapacidades.map(d => ({ tipoDiscapacidadId: d.tipoDiscapacidadId, observaciones: d.observaciones ?? undefined }))}
           onClose={() => setModal(null)}
         />
       )}
       {modal === 'contactos' && (
         <ModalContactos
-          estudianteId={Number(id)}
+          estudianteId={est.id}
           actuales={est.contactosEmergencia.map(c => ({ nombreCompleto: c.nombreCompleto, parentesco: c.parentesco, direccion: c.direccion ?? undefined }))}
           onClose={() => setModal(null)}
         />
@@ -311,7 +282,6 @@ function ModalShell({
         style={{ background: '#1e293b', border: '1px solid #334155' }}
         className="w-full max-w-lg rounded-2xl overflow-hidden"
       >
-        {/* Header */}
         <div
           style={{ background: '#0f172a', borderBottom: '1px solid #1e293b' }}
           className="px-5 py-4 flex items-center justify-between"
@@ -319,13 +289,9 @@ function ModalShell({
           <h2 className="text-sm font-semibold" style={{ color: '#F4E9CD' }}>{titulo}</h2>
           <button onClick={onClose} style={{ color: '#475569' }} className="text-xl leading-none hover:text-slate-300 transition">×</button>
         </div>
-
-        {/* Body */}
         <div className="p-5 space-y-3 max-h-104 overflow-y-auto">
           {children}
         </div>
-
-        {/* Footer */}
         <div style={{ borderTop: '1px solid #1e293b' }} className="px-5 py-4 flex justify-end gap-3">
           <button
             onClick={onClose}
@@ -347,8 +313,6 @@ function ModalShell({
     </div>
   )
 }
-
-// ─── Botón "agregar ítem" reutilizable ────────────────────────────────────────
 
 function BtnAgregar({ onClick, label }: { onClick: () => void; label: string }) {
   return (
@@ -384,7 +348,11 @@ function ModalTelefonos({
 
   const mut = useMutation({
     mutationFn: () => actualizarTelefonos(estudianteId, lista),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['estudiante', String(estudianteId)] }); toast.success('Teléfonos actualizados'); onClose() },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['mi-expediente'] })
+      toast.success('Teléfonos actualizados')
+      onClose()
+    },
     onError: () => toast.error('Error al actualizar teléfonos'),
   })
 
@@ -449,7 +417,11 @@ function ModalCondiciones({
 
   const mut = useMutation({
     mutationFn: () => actualizarCondicionesMedicas(estudianteId, lista.filter(c => c.descripcion.trim() !== '')),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['estudiante', String(estudianteId)] }); toast.success('Condiciones médicas actualizadas'); onClose() },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['mi-expediente'] })
+      toast.success('Condiciones médicas actualizadas')
+      onClose()
+    },
     onError: () => toast.error('Error al actualizar condiciones médicas'),
   })
 
@@ -498,7 +470,11 @@ function ModalAlergias({
 
   const mut = useMutation({
     mutationFn: () => actualizarAlergias(estudianteId, lista),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['estudiante', String(estudianteId)] }); toast.success('Alergias actualizadas'); onClose() },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['mi-expediente'] })
+      toast.success('Alergias actualizadas')
+      onClose()
+    },
     onError: () => toast.error('Error al actualizar alergias'),
   })
 
@@ -567,7 +543,11 @@ function ModalDiscapacidades({
 
   const mut = useMutation({
     mutationFn: () => actualizarDiscapacidades(estudianteId, lista),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['estudiante', String(estudianteId)] }); toast.success('Discapacidades actualizadas'); onClose() },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['mi-expediente'] })
+      toast.success('Discapacidades actualizadas')
+      onClose()
+    },
     onError: () => toast.error('Error al actualizar discapacidades'),
   })
 
@@ -633,7 +613,11 @@ function ModalContactos({
 
   const mut = useMutation({
     mutationFn: () => actualizarContactosEmergencia(estudianteId, lista),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['estudiante', String(estudianteId)] }); toast.success('Contactos de emergencia actualizados'); onClose() },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['mi-expediente'] })
+      toast.success('Contactos de emergencia actualizados')
+      onClose()
+    },
     onError: () => toast.error('Error al actualizar contactos'),
   })
 

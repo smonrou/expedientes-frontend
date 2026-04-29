@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
-import { Plus } from 'lucide-react'
+import { Plus, X } from 'lucide-react'
 import { listarPorCarrera, listarPorEstudiante } from '@/api/justificaciones'
 import { listarCarreras } from '@/api/catalogos'
+import { buscarEstudiantes } from '@/api/estudiantes'
 import { useAuth } from '@/hooks/useAuth'
 import BadgeEstado from '@/components/justificaciones/BadgeEstado'
 import type { EstadoJustificacion, JustificacionResumenResponse } from '@/types'
@@ -20,43 +21,73 @@ const ESTADOS: { value: EstadoJustificacion | ''; label: string }[] = [
 
 /**
  * Página principal de justificaciones.
- * ADMIN/COORDINADOR ven por carrera con filtros.
+ * ADMIN/COORDINADOR ven por carrera con filtros, y pueden buscar por estudiante específico.
  * ESTUDIANTE ve sus propias justificaciones.
  */
 export default function JustificacionesPage() {
   const navigate = useNavigate()
   const { sesion, tieneRol } = useAuth()
+
+  // Filtros para ADMIN/COORDINADOR
   const [carreraId, setCarreraId] = useState<number | undefined>()
   const [estado, setEstado] = useState<EstadoJustificacion | ''>('')
-  const [estudianteId] = useState<number | undefined>(
-    tieneRol('ESTUDIANTE') ? sesion?.usuarioId : undefined
-  )
 
-  const { data: carreras = [] } = useQuery({
-    queryKey: ['catalogo', 'carreras'],
-    queryFn: listarCarreras,
-    enabled: tieneRol('ADMIN', 'COORDINADOR'),
-  })
+  // Búsqueda de estudiante específico
+  const [terminoBusqueda, setTerminoBusqueda] = useState('')
+  const [estudianteFiltro, setEstudianteFiltro] = useState<{ id: number; nombre: string; carne: string } | null>(null)
+  const [mostrarDropdown, setMostrarDropdown] = useState(false)
 
-  const { data: justificaciones = [], isLoading } = useQuery({
-    queryKey: ['justificaciones', carreraId, estado, estudianteId],
-    queryFn: () => {
-      if (tieneRol('ESTUDIANTE') && estudianteId) {
-        return listarPorEstudiante(estudianteId)
-      }
-      if (carreraId) {
-        return listarPorCarrera(carreraId, estado || undefined)
-      }
-      return Promise.resolve<JustificacionResumenResponse[]>([])
-    },
-    enabled: tieneRol('ESTUDIANTE') ? !!estudianteId : !!carreraId,
-  })
+  // Para ESTUDIANTE autenticado
+  const estudianteIdPropio = tieneRol('ESTUDIANTE') ? sesion?.usuarioId : undefined
 
   const inputStyle = {
     background: '#1e293b',
     border: '1px solid #334155',
     color: '#f1f5f9',
     ['--tw-ring-color' as string]: '#F4E9CD',
+  }
+
+  // Carreras
+  const { data: carreras = [] } = useQuery({
+    queryKey: ['catalogo', 'carreras'],
+    queryFn: listarCarreras,
+    enabled: tieneRol('ADMIN', 'COORDINADOR'),
+  })
+
+  // Búsqueda de estudiantes (solo cuando hay término y rol correcto)
+  const { data: resultadosBusqueda = [] } = useQuery({
+    queryKey: ['estudiantes-busqueda', terminoBusqueda, carreraId],
+    queryFn: () => buscarEstudiantes(terminoBusqueda, carreraId),
+    enabled: tieneRol('ADMIN', 'COORDINADOR') && terminoBusqueda.trim().length >= 2,
+  })
+
+  // Justificaciones
+  const { data: justificaciones = [], isLoading } = useQuery({
+    queryKey: ['justificaciones', carreraId, estado, estudianteIdPropio, estudianteFiltro?.id],
+    queryFn: () => {
+      // Rol ESTUDIANTE → sus propias
+      if (tieneRol('ESTUDIANTE') && estudianteIdPropio) {
+        return listarPorEstudiante(estudianteIdPropio)
+      }
+      // Filtro por estudiante específico seleccionado
+      if (estudianteFiltro) {
+        return listarPorEstudiante(estudianteFiltro.id)
+      }
+      // Filtro por carrera
+      if (carreraId) {
+        return listarPorCarrera(carreraId, estado || undefined)
+      }
+      return Promise.resolve<JustificacionResumenResponse[]>([])
+    },
+    enabled: tieneRol('ESTUDIANTE')
+      ? !!estudianteIdPropio
+      : !!estudianteFiltro || !!carreraId,
+  })
+
+  const limpiarEstudiante = () => {
+    setEstudianteFiltro(null)
+    setTerminoBusqueda('')
+    setMostrarDropdown(false)
   }
 
   return (
@@ -92,10 +123,15 @@ export default function JustificacionesPage() {
           className="flex gap-3 p-4 rounded-xl flex-wrap"
           style={{ background: '#0f172a', border: '1px solid #1e293b' }}
         >
+          {/* Selector de carrera — se desactiva si hay estudiante seleccionado */}
           <select
             value={carreraId ?? ''}
-            onChange={e => setCarreraId(e.target.value ? Number(e.target.value) : undefined)}
-            className="flex-1 px-3 py-2.5 rounded-lg text-sm outline-none focus:ring-1"
+            onChange={e => {
+              setCarreraId(e.target.value ? Number(e.target.value) : undefined)
+              limpiarEstudiante()
+            }}
+            disabled={!!estudianteFiltro}
+            className="flex-1 px-3 py-2.5 rounded-lg text-sm outline-none focus:ring-1 disabled:opacity-40"
             style={{ ...inputStyle, minWidth: 180 }}
           >
             <option value="">Seleccionar carrera</option>
@@ -104,10 +140,12 @@ export default function JustificacionesPage() {
             ))}
           </select>
 
+          {/* Selector de estado — se desactiva si hay estudiante seleccionado */}
           <select
             value={estado}
             onChange={e => setEstado(e.target.value as EstadoJustificacion | '')}
-            className="px-3 py-2.5 rounded-lg text-sm outline-none focus:ring-1"
+            disabled={!!estudianteFiltro}
+            className="px-3 py-2.5 rounded-lg text-sm outline-none focus:ring-1 disabled:opacity-40"
             style={{ ...inputStyle, minWidth: 160 }}
           >
             {ESTADOS.map(e => (
@@ -116,6 +154,90 @@ export default function JustificacionesPage() {
               </option>
             ))}
           </select>
+
+          {/* Buscador de estudiante */}
+          <div className="relative" style={{ minWidth: 220 }}>
+            {estudianteFiltro ? (
+              /* Estudiante seleccionado — chip */
+              <div
+                className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm"
+                style={{ ...inputStyle, border: '1px solid rgba(244,233,205,0.3)' }}
+              >
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium truncate" style={{ color: '#F4E9CD' }}>
+                    {estudianteFiltro.nombre}
+                  </p>
+                  <p className="text-xs font-mono" style={{ color: '#475569' }}>
+                    {estudianteFiltro.carne}
+                  </p>
+                </div>
+                <button
+                  onClick={limpiarEstudiante}
+                  style={{ color: '#475569' }}
+                  className="hover:text-slate-300 transition shrink-0"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            ) : (
+              /* Campo de búsqueda */
+              <>
+                <input
+                  type="text"
+                  placeholder="Buscar estudiante..."
+                  value={terminoBusqueda}
+                  onChange={e => {
+                    setTerminoBusqueda(e.target.value)
+                    setMostrarDropdown(true)
+                  }}
+                  onFocus={() => setMostrarDropdown(true)}
+                  onBlur={() => setTimeout(() => setMostrarDropdown(false), 150)}
+                  className="w-full px-3 py-2.5 rounded-lg text-sm outline-none focus:ring-1"
+                  style={inputStyle}
+                />
+                {/* Dropdown de resultados */}
+                {mostrarDropdown && resultadosBusqueda.length > 0 && (
+                  <div
+                    className="absolute top-full left-0 right-0 mt-1 rounded-lg overflow-hidden z-20"
+                    style={{ background: '#1e293b', border: '1px solid #334155' }}
+                  >
+                    {resultadosBusqueda.slice(0, 6).map(est => (
+                      <button
+                        key={est.id}
+                        onMouseDown={() => {
+                          setEstudianteFiltro({
+                            id: est.id,
+                            nombre: `${est.nombres} ${est.apellidos}`,
+                            carne: est.numeroCarne,
+                          })
+                          setTerminoBusqueda('')
+                          setMostrarDropdown(false)
+                          setCarreraId(undefined)
+                          setEstado('')
+                        }}
+                        className="w-full px-3 py-2 text-left hover:bg-white/5 transition"
+                      >
+                        <p className="text-xs font-medium" style={{ color: '#cbd5e1' }}>
+                          {est.nombres} {est.apellidos}
+                        </p>
+                        <p className="text-xs font-mono" style={{ color: '#475569' }}>
+                          {est.numeroCarne}
+                        </p>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {mostrarDropdown && terminoBusqueda.trim().length >= 2 && resultadosBusqueda.length === 0 && (
+                  <div
+                    className="absolute top-full left-0 right-0 mt-1 rounded-lg px-3 py-3 z-20"
+                    style={{ background: '#1e293b', border: '1px solid #334155' }}
+                  >
+                    <p className="text-xs" style={{ color: '#475569' }}>Sin resultados</p>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         </div>
       )}
 
@@ -124,10 +246,10 @@ export default function JustificacionesPage() {
         className="rounded-xl overflow-hidden"
         style={{ background: '#0f172a', border: '1px solid #1e293b' }}
       >
-        {!tieneRol('ESTUDIANTE') && !carreraId ? (
+        {!tieneRol('ESTUDIANTE') && !carreraId && !estudianteFiltro ? (
           <div className="flex items-center justify-center py-16">
             <p className="text-sm" style={{ color: '#475569' }}>
-              Selecciona una carrera para ver las justificaciones.
+              Selecciona una carrera o busca un estudiante.
             </p>
           </div>
         ) : isLoading ? (

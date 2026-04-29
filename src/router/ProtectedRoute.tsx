@@ -18,7 +18,7 @@ export default function ProtectedRoute({ rolesPermitidos }: Props) {
   }
 
   if (rolesPermitidos && !tieneRol(...rolesPermitidos)) {
-    return <Navigate to="/sin-permiso" replace />
+    return <Navigate to="/" replace />
   }
 
   return <Outlet />
