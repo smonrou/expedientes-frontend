@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
@@ -25,6 +25,9 @@ const schemaCrear = z.object({
   correoInstitucional: z.string().email('Correo inválido'),
   correoPersonal: z.string().email('Correo inválido').optional().or(z.literal('')),
   direccion: z.string().min(1, 'Requerido'),
+  pensumCerrado: z.boolean().optional(),
+  fechaCierrePensum: z.string().optional(),
+  rutaFotografia: z.string().url('URL inválida').optional().or(z.literal('')),
 })
 
 const schemaEditar = schemaCrear.omit({ nombreUsuario: true, contrasena: true, numeroCarne: true, cui: true }).extend({
@@ -60,9 +63,13 @@ export default function EstudianteFormPage() {
   })
 
   const schema = esEdicion ? schemaEditar : schemaCrear
-  const { register, handleSubmit, reset, watch, formState: { errors } } = useForm({
+  const { register, handleSubmit, reset, control, formState: { errors } } = useForm({
     resolver: zodResolver(schema),
   })
+
+  // useWatch es compatible con React Compiler, a diferencia de watch()
+  const pensumCerrado = useWatch({ control, name: 'pensumCerrado' })
+  const rutaFotografia = useWatch({ control, name: 'rutaFotografia' })
 
   useEffect(() => {
     if (esEdicion && estudiante) {
@@ -80,6 +87,7 @@ export default function EstudianteFormPage() {
         inscrito: estudiante.inscrito,
         pensumCerrado: estudiante.pensumCerrado,
         fechaCierrePensum: estudiante.fechaCierrePensum ?? '',
+        rutaFotografia: estudiante.rutaFotografia ?? '',
       })
     }
   }, [estudiante, esEdicion, reset])
@@ -106,6 +114,7 @@ export default function EstudianteFormPage() {
       tipoSangreId: dto.tipoSangreId || undefined,
       correoPersonal: dto.correoPersonal || undefined,
       fechaCierrePensum: dto.fechaCierrePensum || undefined,
+      rutaFotografia: dto.rutaFotografia || undefined,
     }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['estudiante', id] })
@@ -139,8 +148,6 @@ export default function EstudianteFormPage() {
     color: '#f1f5f9',
     ['--tw-ring-color' as string]: '#F4E9CD',
   })
-
-  const pensumCerrado = watch('pensumCerrado')
 
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
@@ -204,22 +211,33 @@ export default function EstudianteFormPage() {
               </select>
             </FormField>
           </div>
-          {esEdicion && (
+
+          {/* Pensum — en creación como opcional, en edición con inscrito */}
+          {esEdicion ? (
+            <>
+              <div className="flex gap-6 pt-1">
+                <label className="flex items-center gap-2 text-sm cursor-pointer" style={{ color: '#94a3b8' }}>
+                  <input type="checkbox" style={{ accentColor: '#F4E9CD' }} {...register('inscrito')} />
+                  Inscrito
+                </label>
+                <label className="flex items-center gap-2 text-sm cursor-pointer" style={{ color: '#94a3b8' }}>
+                  <input type="checkbox" style={{ accentColor: '#F4E9CD' }} {...register('pensumCerrado')} />
+                  Pensum cerrado
+                </label>
+              </div>
+              {pensumCerrado && (
+                <FormField label="Fecha de cierre de pensum" error={undefined}>
+                  <input type="date" className="w-full px-4 py-2.5 rounded-lg text-sm outline-none focus:ring-1" style={inputStyle(false)} {...register('fechaCierrePensum')} />
+                </FormField>
+              )}
+            </>
+          ) : (
             <div className="flex gap-6 pt-1">
               <label className="flex items-center gap-2 text-sm cursor-pointer" style={{ color: '#94a3b8' }}>
-                <input type="checkbox" style={{ accentColor: '#F4E9CD' }} {...register('inscrito')} />
-                Inscrito
-              </label>
-              <label className="flex items-center gap-2 text-sm cursor-pointer" style={{ color: '#94a3b8' }}>
                 <input type="checkbox" style={{ accentColor: '#F4E9CD' }} {...register('pensumCerrado')} />
-                Pensum cerrado
+                Pensum cerrado al ingresar
               </label>
             </div>
-          )}
-          {esEdicion && pensumCerrado && (
-            <FormField label="Fecha de cierre de pensum" error={undefined}>
-              <input type="date" className="w-full px-4 py-2.5 rounded-lg text-sm outline-none focus:ring-1" style={inputStyle(false)} {...register('fechaCierrePensum')} />
-            </FormField>
           )}
         </FormSeccion>
 
@@ -252,7 +270,7 @@ export default function EstudianteFormPage() {
           </div>
         </FormSeccion>
 
-        {/* Sección: Contacto */}
+        {/* Sección: Correos */}
         <FormSeccion titulo="Correos">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <FormField label="Correo institucional" error={(errors as Record<string, { message?: string }>).correoInstitucional?.message}>
@@ -262,6 +280,37 @@ export default function EstudianteFormPage() {
               <input type="email" placeholder="juan@gmail.com" className="w-full px-4 py-2.5 rounded-lg text-sm outline-none focus:ring-1" style={inputStyle(!!(errors as Record<string, unknown>).correoPersonal)} {...register('correoPersonal')} />
             </FormField>
           </div>
+        </FormSeccion>
+
+        {/* Sección: Fotografía */}
+        <FormSeccion titulo="Fotografía">
+          <FormField
+            label="URL de fotografía (opcional)"
+            error={(errors as Record<string, { message?: string }>).rutaFotografia?.message}
+          >
+            <input
+              type="text"
+              placeholder="https://ejemplo.com/foto.jpg"
+              className="w-full px-4 py-2.5 rounded-lg text-sm outline-none focus:ring-1"
+              style={inputStyle(!!(errors as Record<string, unknown>).rutaFotografia)}
+              {...register('rutaFotografia')}
+            />
+          </FormField>
+          {/* Preview si la URL es válida */}
+          {rutaFotografia && (
+            <div className="flex items-center gap-3 mt-2">
+              <img
+                src={rutaFotografia as string}
+                alt="Preview"
+                onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
+                className="rounded-lg object-cover"
+                style={{ width: 56, height: 56, border: '1px solid #334155' }}
+              />
+              <p className="text-xs" style={{ color: '#475569' }}>
+                Vista previa de la fotografía
+              </p>
+            </div>
+          )}
         </FormSeccion>
 
         {/* Botones */}
