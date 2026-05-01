@@ -128,3 +128,8 @@
     @apply font-sans;
     }
 }
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) sepia(1) saturate(2) hue-rotate(5deg) brightness(1.1);
+  cursor: pointer;
+}

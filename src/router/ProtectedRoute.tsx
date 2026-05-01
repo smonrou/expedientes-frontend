@@ -1,9 +1,9 @@
-import { Navigate, Outlet } from 'react-router-dom'
-import { useAuth } from '@/hooks/useAuth'
-import type { Rol } from '@/types'
+import { Navigate, Outlet } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import type { Rol } from "@/types";
 
 interface Props {
-  rolesPermitidos?: Rol[]
+  rolesPermitidos?: Rol[];
 }
 
 /**
@@ -11,15 +11,15 @@ interface Props {
  * Si se especifican rolesPermitidos, verifica que el usuario tenga el rol correcto.
  */
 export default function ProtectedRoute({ rolesPermitidos }: Props) {
-  const { autenticado, tieneRol } = useAuth()
+  const { autenticado, tieneRol } = useAuth();
 
   if (!autenticado) {
-    return <Navigate to="/login" replace />
+    return <Navigate to="/login" replace />;
   }
 
   if (rolesPermitidos && !tieneRol(...rolesPermitidos)) {
-    return <Navigate to="/" replace />
+    return <Navigate to="/" replace />;
   }
 
-  return <Outlet />
+  return <Outlet />;
 }

@@ -1,27 +1,14 @@
-// ============================================================
-// src/types/index.ts
-// Tipos globales del proyecto SEEC — generados desde DTOs Java
-// ============================================================
+export type Rol = "ADMIN" | "COORDINADOR" | "ESTUDIANTE";
 
-// ─────────────────────────────────────────────────────────────
-// ENUMS (mapeados como union types)
-// ─────────────────────────────────────────────────────────────
+export type Genero = "MASCULINO" | "FEMENINO" | "OTRO";
 
-export type Rol = 'ADMIN' | 'COORDINADOR' | 'ESTUDIANTE';
-
-export type Genero = 'MASCULINO' | 'FEMENINO' | 'OTRO';
-
-export type TipoTelefono = 'CASA' | 'CELULAR' | 'TRABAJO';
+export type TipoTelefono = "CASA" | "CELULAR" | "TRABAJO";
 
 export type EstadoJustificacion =
-  | 'PRESENTADA'
-  | 'EN_REVISION'
-  | 'APROBADA'
-  | 'RECHAZADA';
-
-// ─────────────────────────────────────────────────────────────
-// AUTH
-// ─────────────────────────────────────────────────────────────
+  | "PRESENTADA"
+  | "EN_REVISION"
+  | "APROBADA"
+  | "RECHAZADA";
 
 export interface LoginRequest {
   correo: string;
@@ -37,11 +24,6 @@ export interface LoginResponse {
   usuarioId: number;
 }
 
-// ─────────────────────────────────────────────────────────────
-// CATÁLOGOS SIMPLES
-// TipoSangre · Alergia · TipoDiscapacidad · TipoActividad · MotivoInasistencia
-// ─────────────────────────────────────────────────────────────
-
 export interface CatalogoRequest {
   nombre: string;
 }
@@ -50,10 +32,6 @@ export interface CatalogoResponse {
   id: number;
   nombre: string;
 }
-
-// ─────────────────────────────────────────────────────────────
-// CARRERA
-// ─────────────────────────────────────────────────────────────
 
 export interface CarreraRequest {
   nombre: string;
@@ -67,10 +45,6 @@ export interface CarreraResponse {
   codigo: string;
   nombreCoordinador: string;
 }
-
-// ─────────────────────────────────────────────────────────────
-// USUARIO
-// ─────────────────────────────────────────────────────────────
 
 export interface UsuarioCreateRequest {
   nombreUsuario: string;
@@ -96,13 +70,8 @@ export interface UsuarioResponse {
   correo: string;
   rol: Rol;
   activo: boolean;
-  /** ISO 8601 — LocalDateTime serializado por Jackson */
   creadoEn: string;
 }
-
-// ─────────────────────────────────────────────────────────────
-// ESTUDIANTE — Sub-DTOs
-// ─────────────────────────────────────────────────────────────
 
 export interface TelefonoRequest {
   numero: string;
@@ -159,30 +128,21 @@ export interface ContactoEmergenciaResponse {
   direccion?: string;
 }
 
-// ─────────────────────────────────────────────────────────────
-// ESTUDIANTE
-// ─────────────────────────────────────────────────────────────
-
 export interface EstudianteCreateRequest {
-  // Acceso
   nombreUsuario: string;
   contrasena: string;
-  // Académico
   numeroCarne: string;
   carreraId: number;
   anioIngreso: number;
   tipoSangreId?: number;
-  // Personal
   nombres: string;
   apellidos: string;
   cui: string;
-  /** ISO 8601 — LocalDate */
   fechaNacimiento: string;
   genero: Genero;
   correoInstitucional: string;
   correoPersonal?: string;
   direccion: string;
-  // Sub-entidades opcionales
   telefonos?: TelefonoRequest[];
   condicionesMedicas?: CondicionMedicaRequest[];
   alergias?: AlergiaRequest[];
@@ -195,7 +155,6 @@ export interface EstudianteUpdateRequest {
   tipoSangreId?: number;
   nombres: string;
   apellidos: string;
-  /** ISO 8601 — LocalDate */
   fechaNacimiento: string;
   genero: Genero;
   correoInstitucional: string;
@@ -203,7 +162,6 @@ export interface EstudianteUpdateRequest {
   direccion: string;
   inscrito: boolean;
   pensumCerrado: boolean;
-  /** ISO 8601 — LocalDate */
   fechaCierrePensum?: string;
   rutaFotografia?: string;
 }
@@ -227,16 +185,14 @@ export interface EstudianteResponse {
   numeroCarne: string;
   nombres: string;
   apellidos: string;
-  cui: string;
-  /** ISO 8601 — LocalDate */
   fechaNacimiento: string;
   genero: Genero;
   correoInstitucional: string;
   correoPersonal?: string;
   anioIngreso: number;
   inscrito: boolean;
+  cui: string;
   pensumCerrado: boolean;
-  /** ISO 8601 — LocalDate */
   fechaCierrePensum?: string;
   direccion: string;
   rutaFotografia?: string;
@@ -251,17 +207,11 @@ export interface EstudianteResponse {
   contactosEmergencia: ContactoEmergenciaResponse[];
 }
 
-// ─────────────────────────────────────────────────────────────
-// ACTIVIDAD EXTRACURRICULAR
-// ─────────────────────────────────────────────────────────────
-
 export interface ActividadRequest {
   tipoActividadId: number;
   nombre: string;
   institucion?: string;
-  /** ISO 8601 — LocalDate */
   fechaInicio: string;
-  /** ISO 8601 — LocalDate */
   fechaFin?: string;
   observaciones?: string;
 }
@@ -273,21 +223,14 @@ export interface ActividadResponse {
   tipoActividadNombre: string;
   nombre: string;
   institucion?: string;
-  /** ISO 8601 — LocalDate */
   fechaInicio: string;
-  /** ISO 8601 — LocalDate */
   fechaFin?: string;
   observaciones?: string;
 }
 
-// ─────────────────────────────────────────────────────────────
-// JUSTIFICACIONES DE INASISTENCIA
-// ─────────────────────────────────────────────────────────────
-
 export interface JustificacionRequest {
   motivoId: number;
   descripcion: string;
-  /** ISO 8601 — LocalDate[] */
   fechas: string[];
 }
 
@@ -297,7 +240,6 @@ export interface CambioEstadoRequest {
 
 export interface FechaInasistenciaResponse {
   id: number;
-  /** ISO 8601 — LocalDate */
   fecha: string;
 }
 
@@ -305,7 +247,6 @@ export interface DocumentoResponse {
   id: number;
   nombreOriginal: string;
   tipoMime: string;
-  /** ISO 8601 — LocalDateTime */
   subidoEn: string;
 }
 
@@ -316,7 +257,6 @@ export interface JustificacionResumenResponse {
   estudianteNumeroCarne: string;
   motivoNombre: string;
   estado: EstadoJustificacion;
-  /** ISO 8601 — LocalDateTime */
   fechaPresentacion: string;
   totalFechas: number;
 }
@@ -330,9 +270,7 @@ export interface JustificacionResponse {
   motivoNombre: string;
   descripcion: string;
   estado: EstadoJustificacion;
-  /** ISO 8601 — LocalDateTime */
   fechaPresentacion: string;
-  /** ISO 8601 — LocalDateTime */
   fechaRevision?: string;
   revisadoPorId?: number;
   revisadoPorNombre?: string;
@@ -340,17 +278,12 @@ export interface JustificacionResponse {
   documentos: DocumentoResponse[];
 }
 
-// ─────────────────────────────────────────────────────────────
-// NOTIFICACIONES
-// ─────────────────────────────────────────────────────────────
-
 export interface NotificacionResponse {
   id: number;
   destinatarioId: number;
   justificacionId: number;
   mensaje: string;
   leida: boolean;
-  /** ISO 8601 — LocalDateTime */
   creadaEn: string;
 }
 
