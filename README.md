@@ -32,6 +32,12 @@ expedientes-frontend
 │  │  │  ├─ ModalCatalogo.tsx
 │  │  │  ├─ TablaCarreras.tsx
 │  │  │  └─ TablaCatalogo.tsx
+│  │  ├─ estudiantes
+│  │  │  ├─ ModalAlergias.tsx
+│  │  │  ├─ ModalCondicionesMedicas.tsx
+│  │  │  ├─ ModalContactosEmergencia.tsx
+│  │  │  ├─ ModalDiscapacidades.tsx
+│  │  │  └─ ModalTelefonos.tsx
 │  │  ├─ justificaciones
 │  │  │  └─ BadgeEstado.tsx
 │  │  ├─ layout
@@ -60,6 +66,8 @@ expedientes-frontend
 │  │  ├─ JustificacionesPage.tsx
 │  │  ├─ JustificacionFormPage.tsx
 │  │  ├─ LoginPage.tsx
+│  │  ├─ MiExpedientePage.tsx
+│  │  ├─ NotFoundPage.tsx
 │  │  ├─ NotificacionesPage.tsx
 │  │  └─ UsuariosPage.tsx
 │  ├─ router
@@ -72,6 +80,7 @@ expedientes-frontend
 ├─ tsconfig.app.json
 ├─ tsconfig.json
 ├─ tsconfig.node.json
+├─ vercel.json
 └─ vite.config.ts
 
 ```
