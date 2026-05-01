@@ -97,7 +97,7 @@ export default function MiExpedientePage() {
                 onError={(e) => {
                   const el = e.currentTarget;
                   el.style.display = "none";
-                  el.parentElement!.innerHTML = `<span style="color:#F4E9CD;font-size:13px;font-weight:600">${est.nombres[0]}${est.apellidos[0]}</span>`;
+                  el.parentElement!.innerHTML = `<span style="color:#F4E9CD;font-size:64px;font-weight:600">${est.nombres[0]}${est.apellidos[0]}</span>`;
                 }}
               />
             ) : (

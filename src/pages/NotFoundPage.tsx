@@ -27,11 +27,11 @@ export default function NotFoundPage() {
           </p>
         </div>
         <button
-          onClick={() => navigate('/dashboard')}
+          onClick={() => navigate('/estudiantes')}
           className="mt-2 px-4 py-2 rounded-lg text-sm font-medium transition hover:opacity-90"
           style={{ background: '#F4E9CD', color: '#0f172a' }}
         >
-          Volver al dashboard
+          Volver
         </button>
       </div>
     </div>

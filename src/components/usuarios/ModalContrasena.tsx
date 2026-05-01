@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { X } from 'lucide-react'
 
 const schema = z.object({
-  nuevaContrasena: z.string().min(6, 'Mínimo 6 caracteres'),
+  nuevaContrasena: z.string().min(6, 'Mínimo 8 caracteres'),
   confirmar: z.string().min(1, 'Confirma la contraseña'),
 }).refine(d => d.nuevaContrasena === d.confirmar, {
   message: 'Las contraseñas no coinciden',

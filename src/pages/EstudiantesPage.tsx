@@ -84,7 +84,7 @@ export default function EstudiantesPage() {
             value={termino}
             onChange={e => setTermino(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Buscar por nombre, carné o correo..."
+            placeholder="Buscar por carné..."
             className="w-full pl-9 pr-4 py-2.5 rounded-lg text-sm outline-none transition focus:ring-1"
             style={{
               background: '#1e293b',

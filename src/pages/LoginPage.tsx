@@ -45,7 +45,7 @@ export default function LoginPage() {
       };
       guardarSesion(sesion);
       toast.success(`Bienvenido, ${sesion.nombreUsuario}`);
-      navigate("/dashboard");
+      navigate("/estudiantes");
     } catch (error: unknown) {
       const status = (error as { response?: { status: number } })?.response
         ?.status;

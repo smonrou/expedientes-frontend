@@ -204,7 +204,7 @@ function ModalCambiarContrasena({
               type="password"
               value={contrasenaNueva}
               onChange={(e) => setContrasenaNueva(e.target.value)}
-              placeholder="Mínimo 6 caracteres"
+              placeholder="Mínimo 8 caracteres"
               style={inputSt}
               className="w-full px-3 py-2 rounded-lg text-sm outline-none focus:ring-1"
             />

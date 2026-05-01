@@ -8,7 +8,7 @@ import type { UsuarioResponse, Rol } from '@/types'
 const schemaCrear = z.object({
   nombreUsuario: z.string().min(1, 'El nombre es requerido'),
   correo: z.string().min(1, 'El correo es requerido').email('Correo inválido'),
-  contrasena: z.string().min(6, 'Mínimo 6 caracteres'),
+  contrasena: z.string().min(6, 'Mínimo 8 caracteres'),
   rol: z.enum(['ADMIN', 'COORDINADOR', 'ESTUDIANTE']),
 })
 

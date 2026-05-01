@@ -184,7 +184,7 @@ export default function JustificacionesPage() {
               <>
                 <input
                   type="text"
-                  placeholder="Buscar estudiante..."
+                  placeholder="Buscar por Carnet"
                   value={terminoBusqueda}
                   onChange={e => {
                     setTerminoBusqueda(e.target.value)
