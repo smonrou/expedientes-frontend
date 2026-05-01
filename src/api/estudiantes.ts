@@ -1,4 +1,4 @@
-import api from './axios'
+import api from "./axios";
 import type {
   EstudianteResumenResponse,
   EstudianteResponse,
@@ -9,14 +9,16 @@ import type {
   AlergiaRequest,
   DiscapacidadRequest,
   ContactoEmergenciaRequest,
-} from '@/types'
+} from "@/types";
 
 /**
  * Obtiene el listado completo de estudiantes (resumen).
  */
-export async function listarEstudiantes(): Promise<EstudianteResumenResponse[]> {
-  const { data } = await api.get<EstudianteResumenResponse[]>('/estudiantes')
-  return data
+export async function listarEstudiantes(): Promise<
+  EstudianteResumenResponse[]
+> {
+  const { data } = await api.get<EstudianteResumenResponse[]>("/estudiantes");
+  return data;
 }
 
 /**
@@ -24,38 +26,50 @@ export async function listarEstudiantes(): Promise<EstudianteResumenResponse[]> 
  */
 export async function buscarEstudiantes(
   termino: string,
-  carreraId?: number
+  carreraId?: number,
 ): Promise<EstudianteResumenResponse[]> {
-  const { data } = await api.get<EstudianteResumenResponse[]>('/estudiantes/buscar', {
-    params: { termino, ...(carreraId ? { carreraId } : {}) },
-  })
-  return data
+  const { data } = await api.get<EstudianteResumenResponse[]>(
+    "/estudiantes/buscar",
+    {
+      params: { termino, ...(carreraId ? { carreraId } : {}) },
+    },
+  );
+  return data;
 }
 
 /**
  * Obtiene el expediente completo de un estudiante por ID.
  */
-export async function obtenerEstudiante(id: number): Promise<EstudianteResponse> {
-  const { data } = await api.get<EstudianteResponse>(`/estudiantes/${id}`)
-  return data
+export async function obtenerEstudiante(
+  id: number,
+): Promise<EstudianteResponse> {
+  const { data } = await api.get<EstudianteResponse>(`/estudiantes/${id}`);
+  return data;
 }
 
 /**
  * Obtiene el expediente del estudiante autenticado.
  */
-export async function obtenerMiExpediente(usuarioId: number): Promise<EstudianteResponse> {
-  const { data } = await api.get<EstudianteResponse>('/estudiantes/mi-expediente', {
-    params: { usuarioId },
-  })
-  return data
+export async function obtenerMiExpediente(
+  usuarioId: number,
+): Promise<EstudianteResponse> {
+  const { data } = await api.get<EstudianteResponse>(
+    "/estudiantes/mi-expediente",
+    {
+      params: { usuarioId },
+    },
+  );
+  return data;
 }
 
 /**
  * Crea un nuevo estudiante con su usuario y datos completos.
  */
-export async function crearEstudiante(dto: EstudianteCreateRequest): Promise<EstudianteResponse> {
-  const { data } = await api.post<EstudianteResponse>('/estudiantes', dto)
-  return data
+export async function crearEstudiante(
+  dto: EstudianteCreateRequest,
+): Promise<EstudianteResponse> {
+  const { data } = await api.post<EstudianteResponse>("/estudiantes", dto);
+  return data;
 }
 
 /**
@@ -63,10 +77,10 @@ export async function crearEstudiante(dto: EstudianteCreateRequest): Promise<Est
  */
 export async function actualizarEstudiante(
   id: number,
-  dto: EstudianteUpdateRequest
+  dto: EstudianteUpdateRequest,
 ): Promise<EstudianteResponse> {
-  const { data } = await api.put<EstudianteResponse>(`/estudiantes/${id}`, dto)
-  return data
+  const { data } = await api.put<EstudianteResponse>(`/estudiantes/${id}`, dto);
+  return data;
 }
 
 /**
@@ -74,10 +88,13 @@ export async function actualizarEstudiante(
  */
 export async function actualizarTelefonos(
   id: number,
-  telefonos: TelefonoRequest[]
+  telefonos: TelefonoRequest[],
 ): Promise<EstudianteResponse> {
-  const { data } = await api.put<EstudianteResponse>(`/estudiantes/${id}/telefonos`, telefonos)
-  return data
+  const { data } = await api.put<EstudianteResponse>(
+    `/estudiantes/${id}/telefonos`,
+    telefonos,
+  );
+  return data;
 }
 
 /**
@@ -85,10 +102,13 @@ export async function actualizarTelefonos(
  */
 export async function actualizarCondicionesMedicas(
   id: number,
-  condiciones: CondicionMedicaRequest[]
+  condiciones: CondicionMedicaRequest[],
 ): Promise<EstudianteResponse> {
-  const { data } = await api.put<EstudianteResponse>(`/estudiantes/${id}/condiciones-medicas`, condiciones)
-  return data
+  const { data } = await api.put<EstudianteResponse>(
+    `/estudiantes/${id}/condiciones-medicas`,
+    condiciones,
+  );
+  return data;
 }
 
 /**
@@ -96,10 +116,13 @@ export async function actualizarCondicionesMedicas(
  */
 export async function actualizarAlergias(
   id: number,
-  alergias: AlergiaRequest[]
+  alergias: AlergiaRequest[],
 ): Promise<EstudianteResponse> {
-  const { data } = await api.put<EstudianteResponse>(`/estudiantes/${id}/alergias`, alergias)
-  return data
+  const { data } = await api.put<EstudianteResponse>(
+    `/estudiantes/${id}/alergias`,
+    alergias,
+  );
+  return data;
 }
 
 /**
@@ -107,10 +130,13 @@ export async function actualizarAlergias(
  */
 export async function actualizarDiscapacidades(
   id: number,
-  discapacidades: DiscapacidadRequest[]
+  discapacidades: DiscapacidadRequest[],
 ): Promise<EstudianteResponse> {
-  const { data } = await api.put<EstudianteResponse>(`/estudiantes/${id}/discapacidades`, discapacidades)
-  return data
+  const { data } = await api.put<EstudianteResponse>(
+    `/estudiantes/${id}/discapacidades`,
+    discapacidades,
+  );
+  return data;
 }
 
 /**
@@ -118,33 +144,36 @@ export async function actualizarDiscapacidades(
  */
 export async function actualizarContactosEmergencia(
   id: number,
-  contactos: ContactoEmergenciaRequest[]
+  contactos: ContactoEmergenciaRequest[],
 ): Promise<EstudianteResponse> {
-  const { data } = await api.put<EstudianteResponse>(`/estudiantes/${id}/contactos-emergencia`, contactos)
-  return data
+  const { data } = await api.put<EstudianteResponse>(
+    `/estudiantes/${id}/contactos-emergencia`,
+    contactos,
+  );
+  return data;
 }
 
 export interface TelefonoInput {
-  numero: string
-  tipo: 'CASA' | 'CELULAR' | 'TRABAJO'
+  numero: string;
+  tipo: "CASA" | "CELULAR" | "TRABAJO";
 }
 
 export interface CondicionMedicaInput {
-  descripcion: string
+  descripcion: string;
 }
 
 export interface AlergiaInput {
-  alergiaId: number
-  observaciones?: string | null
+  alergiaId: number;
+  observaciones?: string | null;
 }
 
 export interface DiscapacidadInput {
-  tipoDiscapacidadId: number
-  observaciones?: string | null
+  tipoDiscapacidadId: number;
+  observaciones?: string | null;
 }
 
 export interface ContactoEmergenciaInput {
-  nombreCompleto: string
-  parentesco: string
-  direccion?: string
+  nombreCompleto: string;
+  parentesco: string;
+  direccion?: string;
 }

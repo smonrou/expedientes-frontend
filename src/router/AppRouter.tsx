@@ -1,7 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "./ProtectedRoute";
 import LoginPage from "@/pages/LoginPage";
-import DashboardPage from "@/pages/DashboardPage";
 import AppLayout from "@/components/layout/AppLayout";
 import CatalogosPage from "@/pages/CatalogosPage";
 import UsuariosPage from "@/pages/UsuariosPage";
@@ -36,7 +35,6 @@ export default function AppRouter() {
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
             {/* Accesible para todos los roles */}
-            <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/justificaciones" element={<JustificacionesPage />} />
             <Route
               path="/justificaciones/:id"
@@ -48,7 +46,7 @@ export default function AppRouter() {
             />
             <Route path="/notificaciones" element={<NotificacionesPage />} />
 
-            {/* Solo ADMIN y COORDINADOR — listado y detalle de estudiantes */}
+            {/* Solo ADMIN y COORDINADOR */}
             <Route
               element={
                 <ProtectedRoute rolesPermitidos={["ADMIN", "COORDINADOR"]} />
@@ -61,7 +59,7 @@ export default function AppRouter() {
               />
             </Route>
 
-            {/* Solo ADMIN — creación, edición, usuarios y catálogos */}
+            {/* Solo ADMIN */}
             <Route element={<ProtectedRoute rolesPermitidos={["ADMIN"]} />}>
               <Route
                 path="/estudiantes/nuevo"
@@ -100,11 +98,11 @@ export default function AppRouter() {
                   No tienes permisos para acceder a esta página.
                 </p>
                 <a
-                  href="/dashboard"
+                  href="/estudiantes"
                   className="block text-xs mt-4 hover:opacity-70 transition"
                   style={{ color: "#F4E9CD" }}
                 >
-                  Volver al dashboard
+                  Volver
                 </a>
               </div>
             </div>

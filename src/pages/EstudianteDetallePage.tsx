@@ -1,30 +1,44 @@
-import { useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Pencil } from 'lucide-react'
-import { toast } from 'sonner'
-import { obtenerEstudiante } from '@/api/estudiantes'
+import { useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { ArrowLeft, Pencil } from "lucide-react";
+import { toast } from "sonner";
+import { obtenerEstudiante } from "@/api/estudiantes";
 import {
   actualizarTelefonos,
   actualizarCondicionesMedicas,
   actualizarAlergias,
   actualizarDiscapacidades,
   actualizarContactosEmergencia,
-} from '@/api/estudiantes'
-import { listarCatalogo } from '@/api/catalogos'
-import { useAuth } from '@/hooks/useAuth'
+} from "@/api/estudiantes";
+import { listarCatalogo } from "@/api/catalogos";
+import { useAuth } from "@/hooks/useAuth";
 
 // ─── Tipos de input ───────────────────────────────────────────────────────────
-import type { AlergiaRequest, DiscapacidadRequest, ContactoEmergenciaRequest } from '@/types'
+import type {
+  AlergiaRequest,
+  DiscapacidadRequest,
+  ContactoEmergenciaRequest,
+} from "@/types";
 
-type TipoTelefono = 'CASA' | 'CELULAR' | 'TRABAJO'
+type TipoTelefono = "CASA" | "CELULAR" | "TRABAJO";
 
-interface TelefonoInput { numero: string; tipo: TipoTelefono }
-interface CondicionInput { descripcion: string }
+interface TelefonoInput {
+  numero: string;
+  tipo: TipoTelefono;
+}
+interface CondicionInput {
+  descripcion: string;
+}
 
 // ─── Estilos compartidos ──────────────────────────────────────────────────────
-const inputSt: React.CSSProperties = { background: '#0f172a', border: '1px solid #334155', color: '#f1f5f9' }
-const inputCls = 'w-full px-3 py-2 rounded-lg text-sm outline-none focus:ring-1'
+const inputSt: React.CSSProperties = {
+  background: "#0f172a",
+  border: "1px solid #334155",
+  color: "#f1f5f9",
+};
+const inputCls =
+  "w-full px-3 py-2 rounded-lg text-sm outline-none focus:ring-1";
 
 // ─── Página principal ─────────────────────────────────────────────────────────
 
@@ -33,82 +47,98 @@ const inputCls = 'w-full px-3 py-2 rounded-lg text-sm outline-none focus:ring-1'
  * Incluye edición de subentidades mediante modales para ADMIN y ESTUDIANTE.
  */
 export default function EstudianteDetallePage() {
-  const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
-  const { tieneRol } = useAuth()
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { tieneRol } = useAuth();
 
-  type ModalId = 'telefonos' | 'condiciones' | 'alergias' | 'discapacidades' | 'contactos' | null
-  const [modal, setModal] = useState<ModalId>(null)
+  type ModalId =
+    | "telefonos"
+    | "condiciones"
+    | "alergias"
+    | "discapacidades"
+    | "contactos"
+    | null;
+  const [modal, setModal] = useState<ModalId>(null);
 
-  const puedeEditar = tieneRol('ADMIN', 'ESTUDIANTE')
+  const puedeEditar = tieneRol("ADMIN", "ESTUDIANTE");
 
   const { data: est, isLoading } = useQuery({
-    queryKey: ['estudiante', id],
+    queryKey: ["estudiante", id],
     queryFn: () => obtenerEstudiante(Number(id)),
     enabled: !!id,
-  })
+  });
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <p className="text-sm" style={{ color: '#475569' }}>Cargando expediente...</p>
+        <p className="text-sm" style={{ color: "#475569" }}>
+          Cargando expediente...
+        </p>
       </div>
-    )
+    );
   }
 
-  if (!est) return null
+  if (!est) return null;
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
-
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => navigate('/estudiantes')}
+            onClick={() => navigate("/estudiantes")}
             className="flex items-center justify-center rounded-lg transition hover:opacity-70"
-            style={{ width: 32, height: 32, background: '#1e293b' }}
+            style={{ width: 32, height: 32, background: "#1e293b" }}
           >
-            <ArrowLeft size={15} style={{ color: '#94a3b8' }} />
+            <ArrowLeft size={15} style={{ color: "#94a3b8" }} />
           </button>
 
           {/* Avatar */}
           <div
             className="flex items-center justify-center rounded-full overflow-hidden shrink-0"
-            style={{ width: 128, height: 128, background: 'rgba(244,233,205,0.1)', border: '1px solid #1e293b' }}
+            style={{
+              width: 128,
+              height: 128,
+              background: "rgba(244,233,205,0.1)",
+              border: "1px solid #1e293b",
+            }}
           >
             {est.rutaFotografia ? (
               <img
                 src={est.rutaFotografia}
                 alt={`${est.nombres} ${est.apellidos}`}
                 className="w-full h-full object-cover"
-                onError={e => {
-                  const el = e.currentTarget
-                  el.style.display = 'none'
-                  el.parentElement!.innerHTML = `<span style="color:#F4E9CD;font-size:64px;font-weight:600">${est.nombres[0]}${est.apellidos[0]}</span>`
+                onError={(e) => {
+                  const el = e.currentTarget;
+                  el.style.display = "none";
+                  el.parentElement!.innerHTML = `<span style="color:#F4E9CD;font-size:64px;font-weight:600">${est.nombres[0]}${est.apellidos[0]}</span>`;
                 }}
               />
             ) : (
-              <span style={{ color: '#F4E9CD', fontSize: 20, fontWeight: 600 }}>
-                {est.nombres[0]}{est.apellidos[0]}
+              <span style={{ color: "#F4E9CD", fontSize: 20, fontWeight: 600 }}>
+                {est.nombres[0]}
+                {est.apellidos[0]}
               </span>
             )}
           </div>
 
           <div>
-            <h1 className="text-lg font-semibold" style={{ color: '#F4E9CD' }}>
+            <h1 className="text-lg font-semibold" style={{ color: "#F4E9CD" }}>
               {est.nombres} {est.apellidos}
             </h1>
-            <p className="text-xs mt-0.5 font-mono" style={{ color: '#475569' }}>
+            <p
+              className="text-xs mt-0.5 font-mono"
+              style={{ color: "#475569" }}
+            >
               {est.numeroCarne}
             </p>
           </div>
         </div>
-        {tieneRol('ADMIN') && (
+        {tieneRol("ADMIN") && (
           <button
             onClick={() => navigate(`/estudiantes/${id}/editar`)}
             className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition hover:opacity-90"
-            style={{ background: '#F4E9CD', color: '#0f172a' }}
+            style={{ background: "#F4E9CD", color: "#0f172a" }}
           >
             <Pencil size={14} />
             Editar
@@ -118,7 +148,6 @@ export default function EstudianteDetallePage() {
 
       {/* Grid de secciones */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-
         {/* Datos personales */}
         <Seccion titulo="Datos personales">
           <Campo label="Nombres" valor={`${est.nombres} ${est.apellidos}`} />
@@ -133,70 +162,121 @@ export default function EstudianteDetallePage() {
           <Campo label="Carné" valor={est.numeroCarne} mono />
           <Campo label="Carrera" valor={est.carreraNombre} />
           <Campo label="Año de ingreso" valor={String(est.anioIngreso)} />
-          <Campo label="Inscrito" valor={est.inscrito ? 'Sí' : 'No'} />
-          <Campo label="Pensum cerrado" valor={est.pensumCerrado ? 'Sí' : 'No'} />
+          <Campo label="Inscrito" valor={est.inscrito ? "Sí" : "No"} />
+          <Campo
+            label="Pensum cerrado"
+            valor={est.pensumCerrado ? "Sí" : "No"}
+          />
           {est.fechaCierrePensum && (
             <Campo label="Fecha cierre pensum" valor={est.fechaCierrePensum} />
           )}
         </Seccion>
 
         {/* Contacto — con botón editar teléfonos */}
-        <Seccion titulo="Contacto" onEditar={puedeEditar ? () => setModal('telefonos') : undefined}>
+        <Seccion
+          titulo="Contacto"
+          onEditar={puedeEditar ? () => setModal("telefonos") : undefined}
+        >
           <Campo label="Correo institucional" valor={est.correoInstitucional} />
-          {est.correoPersonal && <Campo label="Correo personal" valor={est.correoPersonal} />}
-          {est.tipoSangreNombre && <Campo label="Tipo de sangre" valor={est.tipoSangreNombre} badge />}
+          {est.correoPersonal && (
+            <Campo label="Correo personal" valor={est.correoPersonal} />
+          )}
+          {est.tipoSangreNombre && (
+            <Campo label="Tipo de sangre" valor={est.tipoSangreNombre} badge />
+          )}
           {est.telefonos.length === 0 ? (
-            <p className="text-xs" style={{ color: '#475569' }}>Sin teléfonos registrados.</p>
+            <p className="text-xs" style={{ color: "#475569" }}>
+              Sin teléfonos registrados.
+            </p>
           ) : (
-            est.telefonos.map(t => (
+            est.telefonos.map((t) => (
               <Campo key={t.id} label={t.tipo} valor={t.numero} mono />
             ))
           )}
         </Seccion>
 
         {/* Información médica — con botón editar */}
-        <Seccion titulo="Información médica" onEditar={puedeEditar ? () => setModal('condiciones') : undefined}>
-          {est.condicionesMedicas.length === 0 && est.alergias.length === 0 && est.discapacidades.length === 0 ? (
-            <p className="text-xs" style={{ color: '#475569' }}>Sin registros médicos.</p>
+        <Seccion
+          titulo="Información médica"
+          onEditar={puedeEditar ? () => setModal("condiciones") : undefined}
+        >
+          {est.condicionesMedicas.length === 0 &&
+          est.alergias.length === 0 &&
+          est.discapacidades.length === 0 ? (
+            <p className="text-xs" style={{ color: "#475569" }}>
+              Sin registros médicos.
+            </p>
           ) : (
             <>
-              {est.condicionesMedicas.map(c => (
+              {est.condicionesMedicas.map((c) => (
                 <Campo key={c.id} label="Condición" valor={c.descripcion} />
               ))}
-              {est.alergias.map(a => (
-                <Campo key={a.alergiaId} label="Alergia" valor={a.observaciones ? `${a.nombre} — ${a.observaciones}` : a.nombre} />
+              {est.alergias.map((a) => (
+                <Campo
+                  key={a.alergiaId}
+                  label="Alergia"
+                  valor={
+                    a.observaciones
+                      ? `${a.nombre} — ${a.observaciones}`
+                      : a.nombre
+                  }
+                />
               ))}
-              {est.discapacidades.map(d => (
-                <Campo key={d.tipoDiscapacidadId} label="Discapacidad" valor={d.observaciones ? `${d.nombre} — ${d.observaciones}` : d.nombre} />
+              {est.discapacidades.map((d) => (
+                <Campo
+                  key={d.tipoDiscapacidadId}
+                  label="Discapacidad"
+                  valor={
+                    d.observaciones
+                      ? `${d.nombre} — ${d.observaciones}`
+                      : d.nombre
+                  }
+                />
               ))}
             </>
           )}
           {/* Botones secundarios para alergias y discapacidades */}
           {puedeEditar && (
             <div className="flex gap-2 pt-1">
-              <BtnSecundario onClick={() => setModal('alergias')}>Editar alergias</BtnSecundario>
-              <BtnSecundario onClick={() => setModal('discapacidades')}>Editar discapacidades</BtnSecundario>
+              <BtnSecundario onClick={() => setModal("alergias")}>
+                Editar alergias
+              </BtnSecundario>
+              <BtnSecundario onClick={() => setModal("discapacidades")}>
+                Editar discapacidades
+              </BtnSecundario>
             </div>
           )}
         </Seccion>
-
       </div>
 
       {/* Contactos de emergencia — ancho completo, con botón editar */}
-      <Seccion titulo="Contactos de emergencia" onEditar={puedeEditar ? () => setModal('contactos') : undefined}>
+      <Seccion
+        titulo="Contactos de emergencia"
+        onEditar={puedeEditar ? () => setModal("contactos") : undefined}
+      >
         {est.contactosEmergencia.length === 0 ? (
-          <p className="text-xs" style={{ color: '#475569' }}>Sin contactos de emergencia registrados.</p>
+          <p className="text-xs" style={{ color: "#475569" }}>
+            Sin contactos de emergencia registrados.
+          </p>
         ) : (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {est.contactosEmergencia.map(c => (
+            {est.contactosEmergencia.map((c) => (
               <div
                 key={c.id}
                 className="rounded-lg p-3 space-y-1"
-                style={{ background: '#1e293b', border: '1px solid #334155' }}
+                style={{ background: "#1e293b", border: "1px solid #334155" }}
               >
-                <p className="text-sm font-medium" style={{ color: '#cbd5e1' }}>{c.nombreCompleto}</p>
-                <p className="text-xs" style={{ color: '#94a3b8' }}>{c.parentesco}</p>
-                {c.direccion && <p className="text-xs" style={{ color: '#475569' }}>{c.direccion}</p>}
+                <p className="text-sm font-medium" style={{ color: "#cbd5e1" }}>
+                  {c.nombreCompleto}
+                </p>
+                <p className="text-xs" style={{ color: "#94a3b8" }}>
+                  {c.parentesco}
+                </p>
+                {c.direccion && (
+                  <p className="text-xs" style={{ color: "#475569" }}>
+                    {c.direccion}
+                  </p>
+                )}
               </div>
             ))}
           </div>
@@ -204,43 +284,58 @@ export default function EstudianteDetallePage() {
       </Seccion>
 
       {/* ── Modales ── */}
-      {modal === 'telefonos' && (
+      {modal === "telefonos" && (
         <ModalTelefonos
           estudianteId={Number(id)}
-          actuales={est.telefonos.map(t => ({ numero: t.numero, tipo: t.tipo as TipoTelefono }))}
+          actuales={est.telefonos.map((t) => ({
+            numero: t.numero,
+            tipo: t.tipo as TipoTelefono,
+          }))}
           onClose={() => setModal(null)}
         />
       )}
-      {modal === 'condiciones' && (
+      {modal === "condiciones" && (
         <ModalCondiciones
           estudianteId={Number(id)}
-          actuales={est.condicionesMedicas.map(c => ({ descripcion: c.descripcion }))}
+          actuales={est.condicionesMedicas.map((c) => ({
+            descripcion: c.descripcion,
+          }))}
           onClose={() => setModal(null)}
         />
       )}
-      {modal === 'alergias' && (
+      {modal === "alergias" && (
         <ModalAlergias
           estudianteId={Number(id)}
-          actuales={est.alergias.map(a => ({ alergiaId: a.alergiaId, observaciones: a.observaciones ?? undefined }))}
+          actuales={est.alergias.map((a) => ({
+            alergiaId: a.alergiaId,
+            observaciones: a.observaciones ?? undefined,
+          }))}
           onClose={() => setModal(null)}
         />
       )}
-      {modal === 'discapacidades' && (
+      {modal === "discapacidades" && (
         <ModalDiscapacidades
           estudianteId={Number(id)}
-          actuales={est.discapacidades.map(d => ({ tipoDiscapacidadId: d.tipoDiscapacidadId, observaciones: d.observaciones ?? undefined }))}
+          actuales={est.discapacidades.map((d) => ({
+            tipoDiscapacidadId: d.tipoDiscapacidadId,
+            observaciones: d.observaciones ?? undefined,
+          }))}
           onClose={() => setModal(null)}
         />
       )}
-      {modal === 'contactos' && (
+      {modal === "contactos" && (
         <ModalContactos
           estudianteId={Number(id)}
-          actuales={est.contactosEmergencia.map(c => ({ nombreCompleto: c.nombreCompleto, parentesco: c.parentesco, direccion: c.direccion ?? undefined }))}
+          actuales={est.contactosEmergencia.map((c) => ({
+            nombreCompleto: c.nombreCompleto,
+            parentesco: c.parentesco,
+            direccion: c.direccion ?? undefined,
+          }))}
           onClose={() => setModal(null)}
         />
       )}
     </div>
-  )
+  );
 }
 
 // ─── Sub-componentes de layout ────────────────────────────────────────────────
@@ -250,24 +345,31 @@ function Seccion({
   children,
   onEditar,
 }: {
-  titulo: string
-  children: React.ReactNode
-  onEditar?: () => void
+  titulo: string;
+  children: React.ReactNode;
+  onEditar?: () => void;
 }) {
   return (
     <div
       className="rounded-xl p-5 space-y-3"
-      style={{ background: '#0f172a', border: '1px solid #1e293b' }}
+      style={{ background: "#0f172a", border: "1px solid #1e293b" }}
     >
       <div className="flex items-center justify-between">
-        <p className="text-xs font-medium uppercase tracking-wider" style={{ color: '#475569', fontSize: 10 }}>
+        <p
+          className="text-xs font-medium uppercase tracking-wider"
+          style={{ color: "#475569", fontSize: 10 }}
+        >
           {titulo}
         </p>
         {onEditar && (
           <button
             onClick={onEditar}
             className="text-xs px-2.5 py-1 rounded-md transition hover:opacity-80"
-            style={{ color: '#F4E9CD', border: '1px solid rgba(244,233,205,0.2)', background: 'rgba(244,233,205,0.04)' }}
+            style={{
+              color: "#F4E9CD",
+              border: "1px solid rgba(244,233,205,0.2)",
+              background: "rgba(244,233,205,0.04)",
+            }}
           >
             Editar
           </button>
@@ -275,39 +377,64 @@ function Seccion({
       </div>
       {children}
     </div>
-  )
+  );
 }
 
-function Campo({ label, valor, mono, badge }: { label: string; valor: string; mono?: boolean; badge?: boolean }) {
+function Campo({
+  label,
+  valor,
+  mono,
+  badge,
+}: {
+  label: string;
+  valor: string;
+  mono?: boolean;
+  badge?: boolean;
+}) {
   return (
     <div className="flex items-start justify-between gap-4">
-      <p className="text-xs shrink-0" style={{ color: '#475569' }}>{label}</p>
+      <p className="text-xs shrink-0" style={{ color: "#475569" }}>
+        {label}
+      </p>
       {badge ? (
         <span
           className="px-2 py-0.5 rounded-md text-xs font-medium"
-          style={{ background: 'rgba(244,233,205,0.08)', color: '#F4E9CD' }}
+          style={{ background: "rgba(244,233,205,0.08)", color: "#F4E9CD" }}
         >
           {valor}
         </span>
       ) : (
-        <p className={`text-xs text-right ${mono ? 'font-mono' : ''}`} style={{ color: '#cbd5e1' }}>
+        <p
+          className={`text-xs text-right ${mono ? "font-mono" : ""}`}
+          style={{ color: "#cbd5e1" }}
+        >
           {valor}
         </p>
       )}
     </div>
-  )
+  );
 }
 
-function BtnSecundario({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
+function BtnSecundario({
+  onClick,
+  children,
+}: {
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
   return (
     <button
       onClick={onClick}
       className="text-xs px-2.5 py-1 rounded-md transition hover:opacity-80"
-      style={{ color: '#94a3b8', border: '1px solid #1e293b', background: 'transparent' }}
+      style={{
+        color: "#94a3b8",
+        border: "1px solid #1e293b",
+        background: "transparent",
+      }}
     >
       {children}
     </button>
-  )
+  );
 }
 
 // ─── Shell reutilizable de modal ──────────────────────────────────────────────
@@ -319,29 +446,37 @@ function ModalShell({
   guardando,
   children,
 }: {
-  titulo: string
-  onClose: () => void
-  onGuardar: () => void
-  guardando: boolean
-  children: React.ReactNode
+  titulo: string;
+  onClose: () => void;
+  onGuardar: () => void;
+  guardando: boolean;
+  children: React.ReactNode;
 }) {
   return (
     <div
-      style={{ background: 'rgba(2,6,23,0.8)' }}
+      style={{ background: "rgba(2,6,23,0.8)" }}
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      onClick={e => e.target === e.currentTarget && onClose()}
+      onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div
-        style={{ background: '#1e293b', border: '1px solid #334155' }}
+        style={{ background: "#1e293b", border: "1px solid #334155" }}
         className="w-full max-w-lg rounded-2xl overflow-hidden"
       >
         {/* Header */}
         <div
-          style={{ background: '#0f172a', borderBottom: '1px solid #1e293b' }}
+          style={{ background: "#0f172a", borderBottom: "1px solid #1e293b" }}
           className="px-5 py-4 flex items-center justify-between"
         >
-          <h2 className="text-sm font-semibold" style={{ color: '#F4E9CD' }}>{titulo}</h2>
-          <button onClick={onClose} style={{ color: '#475569' }} className="text-xl leading-none hover:text-slate-300 transition">×</button>
+          <h2 className="text-sm font-semibold" style={{ color: "#F4E9CD" }}>
+            {titulo}
+          </h2>
+          <button
+            onClick={onClose}
+            style={{ color: "#475569" }}
+            className="text-xl leading-none hover:text-slate-300 transition"
+          >
+            ×
+          </button>
         </div>
 
         {/* Body */}
@@ -350,10 +485,17 @@ function ModalShell({
         </div>
 
         {/* Footer */}
-        <div style={{ borderTop: '1px solid #1e293b' }} className="px-5 py-4 flex justify-end gap-3">
+        <div
+          style={{ borderTop: "1px solid #1e293b" }}
+          className="px-5 py-4 flex justify-end gap-3"
+        >
           <button
             onClick={onClose}
-            style={{ background: '#0f172a', color: '#94a3b8', border: '1px solid #334155' }}
+            style={{
+              background: "#0f172a",
+              color: "#94a3b8",
+              border: "1px solid #334155",
+            }}
             className="px-4 py-2 rounded-lg text-sm font-medium hover:opacity-80 transition"
           >
             Cancelar
@@ -361,29 +503,38 @@ function ModalShell({
           <button
             onClick={onGuardar}
             disabled={guardando}
-            style={{ background: guardando ? '#c9c0a8' : '#F4E9CD', color: '#0f172a' }}
+            style={{
+              background: guardando ? "#c9c0a8" : "#F4E9CD",
+              color: "#0f172a",
+            }}
             className="px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition"
           >
-            {guardando ? 'Guardando...' : 'Guardar'}
+            {guardando ? "Guardando..." : "Guardar"}
           </button>
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 // ─── Botón "agregar ítem" reutilizable ────────────────────────────────────────
 
-function BtnAgregar({ onClick, label }: { onClick: () => void; label: string }) {
+function BtnAgregar({
+  onClick,
+  label,
+}: {
+  onClick: () => void;
+  label: string;
+}) {
   return (
     <button
       onClick={onClick}
-      style={{ color: '#94a3b8', border: '1px dashed #334155' }}
+      style={{ color: "#94a3b8", border: "1px dashed #334155" }}
       className="w-full py-2 rounded-lg text-sm hover:border-slate-400 transition"
     >
       + {label}
     </button>
-  )
+  );
 }
 
 // ─── Modal: Teléfonos ─────────────────────────────────────────────────────────
@@ -397,58 +548,83 @@ function ModalTelefonos({
   actuales,
   onClose,
 }: {
-  estudianteId: number
-  actuales: TelefonoInput[]
-  onClose: () => void
+  estudianteId: number;
+  actuales: TelefonoInput[];
+  onClose: () => void;
 }) {
-  const qc = useQueryClient()
+  const qc = useQueryClient();
   const [lista, setLista] = useState<TelefonoInput[]>(
-    actuales.length > 0 ? actuales : [{ numero: '', tipo: 'CELULAR' }]
-  )
+    actuales.length > 0 ? actuales : [{ numero: "", tipo: "CELULAR" }],
+  );
 
   const mut = useMutation({
     mutationFn: () => actualizarTelefonos(estudianteId, lista),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['estudiante', String(estudianteId)] }); toast.success('Teléfonos actualizados'); onClose() },
-    onError: () => toast.error('Error al actualizar teléfonos'),
-  })
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["estudiante", String(estudianteId)] });
+      toast.success("Teléfonos actualizados");
+      onClose();
+    },
+    onError: () => toast.error("Error al actualizar teléfonos"),
+  });
 
   const set = (i: number, campo: keyof TelefonoInput, val: string) =>
-    setLista(p => p.map((t, idx) => idx === i ? { ...t, [campo]: val } : t))
+    setLista((p) =>
+      p.map((t, idx) => (idx === i ? { ...t, [campo]: val } : t)),
+    );
 
   const guardar = () => {
-    const limpios = lista.filter(t => t.numero.trim() !== '')
-    if (limpios.length === 0) { toast.error('Agrega al menos un número'); return }
-    mut.mutate()
-  }
+    const limpios = lista.filter((t) => t.numero.trim() !== "");
+    if (limpios.length === 0) {
+      toast.error("Agrega al menos un número");
+      return;
+    }
+    mut.mutate();
+  };
 
   return (
-    <ModalShell titulo="Teléfonos" onClose={onClose} onGuardar={guardar} guardando={mut.isPending}>
+    <ModalShell
+      titulo="Teléfonos"
+      onClose={onClose}
+      onGuardar={guardar}
+      guardando={mut.isPending}
+    >
       {lista.map((t, i) => (
         <div key={i} className="flex gap-2 items-center">
           <input
             type="text"
             placeholder="Número"
             value={t.numero}
-            onChange={e => set(i, 'numero', e.target.value)}
+            onChange={(e) => set(i, "numero", e.target.value)}
             style={inputSt}
             className={inputCls}
           />
           <select
             value={t.tipo}
-            onChange={e => set(i, 'tipo', e.target.value)}
+            onChange={(e) => set(i, "tipo", e.target.value)}
             style={inputSt}
             className="px-3 py-2 rounded-lg text-sm outline-none"
           >
-            {(['CELULAR', 'CASA', 'TRABAJO'] as TipoTelefono[]).map(tipo => (
-              <option key={tipo} value={tipo}>{tipo}</option>
+            {(["CELULAR", "CASA", "TRABAJO"] as TipoTelefono[]).map((tipo) => (
+              <option key={tipo} value={tipo}>
+                {tipo}
+              </option>
             ))}
           </select>
-          <button onClick={() => setLista(p => p.filter((_, idx) => idx !== i))} style={{ color: '#f87171' }} className="px-2 text-sm hover:opacity-70 transition">✕</button>
+          <button
+            onClick={() => setLista((p) => p.filter((_, idx) => idx !== i))}
+            style={{ color: "#f87171" }}
+            className="px-2 text-sm hover:opacity-70 transition"
+          >
+            ✕
+          </button>
         </div>
       ))}
-      <BtnAgregar onClick={() => setLista(p => [...p, { numero: '', tipo: 'CELULAR' }])} label="Agregar teléfono" />
+      <BtnAgregar
+        onClick={() => setLista((p) => [...p, { numero: "", tipo: "CELULAR" }])}
+        label="Agregar teléfono"
+      />
     </ModalShell>
-  )
+  );
 }
 
 // ─── Modal: Condiciones médicas ───────────────────────────────────────────────
@@ -462,39 +638,67 @@ function ModalCondiciones({
   actuales,
   onClose,
 }: {
-  estudianteId: number
-  actuales: CondicionInput[]
-  onClose: () => void
+  estudianteId: number;
+  actuales: CondicionInput[];
+  onClose: () => void;
 }) {
-  const qc = useQueryClient()
+  const qc = useQueryClient();
   const [lista, setLista] = useState<CondicionInput[]>(
-    actuales.length > 0 ? actuales : [{ descripcion: '' }]
-  )
+    actuales.length > 0 ? actuales : [{ descripcion: "" }],
+  );
 
   const mut = useMutation({
-    mutationFn: () => actualizarCondicionesMedicas(estudianteId, lista.filter(c => c.descripcion.trim() !== '')),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['estudiante', String(estudianteId)] }); toast.success('Condiciones médicas actualizadas'); onClose() },
-    onError: () => toast.error('Error al actualizar condiciones médicas'),
-  })
+    mutationFn: () =>
+      actualizarCondicionesMedicas(
+        estudianteId,
+        lista.filter((c) => c.descripcion.trim() !== ""),
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["estudiante", String(estudianteId)] });
+      toast.success("Condiciones médicas actualizadas");
+      onClose();
+    },
+    onError: () => toast.error("Error al actualizar condiciones médicas"),
+  });
 
   return (
-    <ModalShell titulo="Condiciones médicas" onClose={onClose} onGuardar={() => mut.mutate()} guardando={mut.isPending}>
+    <ModalShell
+      titulo="Condiciones médicas"
+      onClose={onClose}
+      onGuardar={() => mut.mutate()}
+      guardando={mut.isPending}
+    >
       {lista.map((c, i) => (
         <div key={i} className="flex gap-2 items-center">
           <input
             type="text"
             placeholder="Ej: Asma leve, Diabetes tipo 2..."
             value={c.descripcion}
-            onChange={e => setLista(p => p.map((x, idx) => idx === i ? { descripcion: e.target.value } : x))}
+            onChange={(e) =>
+              setLista((p) =>
+                p.map((x, idx) =>
+                  idx === i ? { descripcion: e.target.value } : x,
+                ),
+              )
+            }
             style={inputSt}
             className={inputCls}
           />
-          <button onClick={() => setLista(p => p.filter((_, idx) => idx !== i))} style={{ color: '#f87171' }} className="px-2 text-sm hover:opacity-70 transition">✕</button>
+          <button
+            onClick={() => setLista((p) => p.filter((_, idx) => idx !== i))}
+            style={{ color: "#f87171" }}
+            className="px-2 text-sm hover:opacity-70 transition"
+          >
+            ✕
+          </button>
         </div>
       ))}
-      <BtnAgregar onClick={() => setLista(p => [...p, { descripcion: '' }])} label="Agregar condición" />
+      <BtnAgregar
+        onClick={() => setLista((p) => [...p, { descripcion: "" }])}
+        label="Agregar condición"
+      />
     </ModalShell>
-  )
+  );
 }
 
 // ─── Modal: Alergias ──────────────────────────────────────────────────────────
@@ -508,62 +712,100 @@ function ModalAlergias({
   actuales,
   onClose,
 }: {
-  estudianteId: number
-  actuales: AlergiaRequest[]
-  onClose: () => void
+  estudianteId: number;
+  actuales: AlergiaRequest[];
+  onClose: () => void;
 }) {
-  const qc = useQueryClient()
-  const [lista, setLista] = useState<AlergiaRequest[]>(actuales)
+  const qc = useQueryClient();
+  const [lista, setLista] = useState<AlergiaRequest[]>(actuales);
 
   const { data: catalogo = [] } = useQuery<{ id: number; nombre: string }[]>({
-    queryKey: ['catalogo', 'alergias'],
-    queryFn: () => listarCatalogo('alergias'),
-  })
+    queryKey: ["catalogo", "alergias"],
+    queryFn: () => listarCatalogo("alergias"),
+  });
 
   const mut = useMutation({
     mutationFn: () => actualizarAlergias(estudianteId, lista),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['estudiante', String(estudianteId)] }); toast.success('Alergias actualizadas'); onClose() },
-    onError: () => toast.error('Error al actualizar alergias'),
-  })
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["estudiante", String(estudianteId)] });
+      toast.success("Alergias actualizadas");
+      onClose();
+    },
+    onError: () => toast.error("Error al actualizar alergias"),
+  });
 
   const agregar = () => {
-    const usados = new Set(lista.map(l => l.alergiaId))
-    const libre = catalogo.find(c => !usados.has(c.id))
-    if (!libre) { toast.error('Ya están todas las alergias disponibles'); return }
-    setLista(p => [...p, { alergiaId: libre.id }])
-  }
+    const usados = new Set(lista.map((l) => l.alergiaId));
+    const libre = catalogo.find((c) => !usados.has(c.id));
+    if (!libre) {
+      toast.error("Ya están todas las alergias disponibles");
+      return;
+    }
+    setLista((p) => [...p, { alergiaId: libre.id }]);
+  };
 
   return (
-    <ModalShell titulo="Alergias" onClose={onClose} onGuardar={() => mut.mutate()} guardando={mut.isPending}>
+    <ModalShell
+      titulo="Alergias"
+      onClose={onClose}
+      onGuardar={() => mut.mutate()}
+      guardando={mut.isPending}
+    >
       {lista.length === 0 && (
-        <p className="text-xs text-center py-2" style={{ color: '#475569' }}>Sin alergias registradas.</p>
+        <p className="text-xs text-center py-2" style={{ color: "#475569" }}>
+          Sin alergias registradas.
+        </p>
       )}
       {lista.map((a, i) => (
         <div key={i} className="space-y-2">
           <div className="flex gap-2 items-center">
             <select
               value={a.alergiaId}
-              onChange={e => setLista(p => p.map((x, idx) => idx === i ? { ...x, alergiaId: Number(e.target.value) } : x))}
+              onChange={(e) =>
+                setLista((p) =>
+                  p.map((x, idx) =>
+                    idx === i ? { ...x, alergiaId: Number(e.target.value) } : x,
+                  ),
+                )
+              }
               style={inputSt}
               className="flex-1 px-3 py-2 rounded-lg text-sm outline-none"
             >
-              {catalogo.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+              {catalogo.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.nombre}
+                </option>
+              ))}
             </select>
-            <button onClick={() => setLista(p => p.filter((_, idx) => idx !== i))} style={{ color: '#f87171' }} className="px-2 text-sm hover:opacity-70 transition">✕</button>
+            <button
+              onClick={() => setLista((p) => p.filter((_, idx) => idx !== i))}
+              style={{ color: "#f87171" }}
+              className="px-2 text-sm hover:opacity-70 transition"
+            >
+              ✕
+            </button>
           </div>
           <input
             type="text"
             placeholder="Observaciones (opcional)"
-            value={a.observaciones ?? ''}
-            onChange={e => setLista(p => p.map((x, idx) => idx === i ? { ...x, observaciones: e.target.value || undefined } : x))}
-            style={{ ...inputSt, border: '1px solid #1e293b', fontSize: 12 }}
+            value={a.observaciones ?? ""}
+            onChange={(e) =>
+              setLista((p) =>
+                p.map((x, idx) =>
+                  idx === i
+                    ? { ...x, observaciones: e.target.value || undefined }
+                    : x,
+                ),
+              )
+            }
+            style={{ ...inputSt, border: "1px solid #1e293b", fontSize: 12 }}
             className="w-full px-3 py-1.5 rounded-lg outline-none focus:ring-1"
           />
         </div>
       ))}
       <BtnAgregar onClick={agregar} label="Agregar alergia" />
     </ModalShell>
-  )
+  );
 }
 
 // ─── Modal: Discapacidades ────────────────────────────────────────────────────
@@ -577,62 +819,102 @@ function ModalDiscapacidades({
   actuales,
   onClose,
 }: {
-  estudianteId: number
-  actuales: DiscapacidadRequest[]
-  onClose: () => void
+  estudianteId: number;
+  actuales: DiscapacidadRequest[];
+  onClose: () => void;
 }) {
-  const qc = useQueryClient()
-  const [lista, setLista] = useState<DiscapacidadRequest[]>(actuales)
+  const qc = useQueryClient();
+  const [lista, setLista] = useState<DiscapacidadRequest[]>(actuales);
 
   const { data: catalogo = [] } = useQuery<{ id: number; nombre: string }[]>({
-    queryKey: ['catalogo', 'tipo-discapacidad'],
-    queryFn: () => listarCatalogo('tipo-discapacidad'),
-  })
+    queryKey: ["catalogo", "tipo-discapacidad"],
+    queryFn: () => listarCatalogo("tipo-discapacidad"),
+  });
 
   const mut = useMutation({
     mutationFn: () => actualizarDiscapacidades(estudianteId, lista),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['estudiante', String(estudianteId)] }); toast.success('Discapacidades actualizadas'); onClose() },
-    onError: () => toast.error('Error al actualizar discapacidades'),
-  })
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["estudiante", String(estudianteId)] });
+      toast.success("Discapacidades actualizadas");
+      onClose();
+    },
+    onError: () => toast.error("Error al actualizar discapacidades"),
+  });
 
   const agregar = () => {
-    const usados = new Set(lista.map(l => l.tipoDiscapacidadId))
-    const libre = catalogo.find(c => !usados.has(c.id))
-    if (!libre) { toast.error('Ya están todos los tipos disponibles'); return }
-    setLista(p => [...p, { tipoDiscapacidadId: libre.id }])
-  }
+    const usados = new Set(lista.map((l) => l.tipoDiscapacidadId));
+    const libre = catalogo.find((c) => !usados.has(c.id));
+    if (!libre) {
+      toast.error("Ya están todos los tipos disponibles");
+      return;
+    }
+    setLista((p) => [...p, { tipoDiscapacidadId: libre.id }]);
+  };
 
   return (
-    <ModalShell titulo="Discapacidades" onClose={onClose} onGuardar={() => mut.mutate()} guardando={mut.isPending}>
+    <ModalShell
+      titulo="Discapacidades"
+      onClose={onClose}
+      onGuardar={() => mut.mutate()}
+      guardando={mut.isPending}
+    >
       {lista.length === 0 && (
-        <p className="text-xs text-center py-2" style={{ color: '#475569' }}>Sin discapacidades registradas.</p>
+        <p className="text-xs text-center py-2" style={{ color: "#475569" }}>
+          Sin discapacidades registradas.
+        </p>
       )}
       {lista.map((d, i) => (
         <div key={i} className="space-y-2">
           <div className="flex gap-2 items-center">
             <select
               value={d.tipoDiscapacidadId}
-              onChange={e => setLista(p => p.map((x, idx) => idx === i ? { ...x, tipoDiscapacidadId: Number(e.target.value) } : x))}
+              onChange={(e) =>
+                setLista((p) =>
+                  p.map((x, idx) =>
+                    idx === i
+                      ? { ...x, tipoDiscapacidadId: Number(e.target.value) }
+                      : x,
+                  ),
+                )
+              }
               style={inputSt}
               className="flex-1 px-3 py-2 rounded-lg text-sm outline-none"
             >
-              {catalogo.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+              {catalogo.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.nombre}
+                </option>
+              ))}
             </select>
-            <button onClick={() => setLista(p => p.filter((_, idx) => idx !== i))} style={{ color: '#f87171' }} className="px-2 text-sm hover:opacity-70 transition">✕</button>
+            <button
+              onClick={() => setLista((p) => p.filter((_, idx) => idx !== i))}
+              style={{ color: "#f87171" }}
+              className="px-2 text-sm hover:opacity-70 transition"
+            >
+              ✕
+            </button>
           </div>
           <input
             type="text"
             placeholder="Observaciones (opcional)"
-            value={d.observaciones ?? ''}
-            onChange={e => setLista(p => p.map((x, idx) => idx === i ? { ...x, observaciones: e.target.value || undefined } : x))}
-            style={{ ...inputSt, border: '1px solid #1e293b', fontSize: 12 }}
+            value={d.observaciones ?? ""}
+            onChange={(e) =>
+              setLista((p) =>
+                p.map((x, idx) =>
+                  idx === i
+                    ? { ...x, observaciones: e.target.value || undefined }
+                    : x,
+                ),
+              )
+            }
+            style={{ ...inputSt, border: "1px solid #1e293b", fontSize: 12 }}
             className="w-full px-3 py-1.5 rounded-lg outline-none focus:ring-1"
           />
         </div>
       ))}
       <BtnAgregar onClick={agregar} label="Agregar discapacidad" />
     </ModalShell>
-  )
+  );
 }
 
 // ─── Modal: Contactos de emergencia ──────────────────────────────────────────
@@ -646,69 +928,140 @@ function ModalContactos({
   actuales,
   onClose,
 }: {
-  estudianteId: number
-  actuales: ContactoEmergenciaRequest[]
-  onClose: () => void
+  estudianteId: number;
+  actuales: ContactoEmergenciaRequest[];
+  onClose: () => void;
 }) {
-  const qc = useQueryClient()
+  const qc = useQueryClient();
   const [lista, setLista] = useState<ContactoEmergenciaRequest[]>(
-    actuales.length > 0 ? actuales : [{ nombreCompleto: '', parentesco: '' }]
-  )
+    actuales.length > 0 ? actuales : [{ nombreCompleto: "", parentesco: "" }],
+  );
 
   const mut = useMutation({
     mutationFn: () => actualizarContactosEmergencia(estudianteId, lista),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['estudiante', String(estudianteId)] }); toast.success('Contactos de emergencia actualizados'); onClose() },
-    onError: () => toast.error('Error al actualizar contactos'),
-  })
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["estudiante", String(estudianteId)] });
+      toast.success("Contactos de emergencia actualizados");
+      onClose();
+    },
+    onError: () => toast.error("Error al actualizar contactos"),
+  });
 
-  const set = (i: number, campo: keyof ContactoEmergenciaRequest, val: string) =>
-    setLista(p => p.map((c, idx) =>
-      idx === i ? { ...c, [campo]: (campo === 'direccion' && val === '') ? undefined : val } : c
-    ))
+  const set = (
+    i: number,
+    campo: keyof ContactoEmergenciaRequest,
+    val: string,
+  ) =>
+    setLista((p) =>
+      p.map((c, idx) =>
+        idx === i
+          ? {
+              ...c,
+              [campo]: campo === "direccion" && val === "" ? undefined : val,
+            }
+          : c,
+      ),
+    );
 
   const guardar = () => {
-    const invalidos = lista.filter(c => !c.nombreCompleto.trim() || !c.parentesco.trim())
-    if (invalidos.length > 0) { toast.error('Nombre y parentesco son requeridos en todos los contactos'); return }
-    mut.mutate()
-  }
+    const invalidos = lista.filter(
+      (c) => !c.nombreCompleto.trim() || !c.parentesco.trim(),
+    );
+    if (invalidos.length > 0) {
+      toast.error("Nombre y parentesco son requeridos en todos los contactos");
+      return;
+    }
+    mut.mutate();
+  };
 
   return (
-    <ModalShell titulo="Contactos de emergencia" onClose={onClose} onGuardar={guardar} guardando={mut.isPending}>
+    <ModalShell
+      titulo="Contactos de emergencia"
+      onClose={onClose}
+      onGuardar={guardar}
+      guardando={mut.isPending}
+    >
       {lista.map((c, i) => (
         <div
           key={i}
           className="rounded-xl p-4 space-y-2 relative"
-          style={{ background: '#0f172a', border: '1px solid #1e293b' }}
+          style={{ background: "#0f172a", border: "1px solid #1e293b" }}
         >
           <button
-            onClick={() => setLista(p => p.filter((_, idx) => idx !== i))}
-            style={{ color: '#f87171' }}
+            onClick={() => setLista((p) => p.filter((_, idx) => idx !== i))}
+            style={{ color: "#f87171" }}
             className="absolute top-3 right-3 text-sm hover:opacity-70 transition"
-          >✕</button>
+          >
+            ✕
+          </button>
 
-          <p className="text-xs font-medium uppercase tracking-wider" style={{ color: '#475569' }}>
+          <p
+            className="text-xs font-medium uppercase tracking-wider"
+            style={{ color: "#475569" }}
+          >
             Contacto {i + 1}
           </p>
 
           <div className="space-y-2 pr-4">
             <div>
-              <label className="block text-xs mb-1" style={{ color: '#94a3b8' }}>Nombre completo *</label>
-              <input type="text" placeholder="Nombre completo" value={c.nombreCompleto} onChange={e => set(i, 'nombreCompleto', e.target.value)} style={inputSt} className={inputCls} />
+              <label
+                className="block text-xs mb-1"
+                style={{ color: "#94a3b8" }}
+              >
+                Nombre completo *
+              </label>
+              <input
+                type="text"
+                placeholder="Nombre completo"
+                value={c.nombreCompleto}
+                onChange={(e) => set(i, "nombreCompleto", e.target.value)}
+                style={inputSt}
+                className={inputCls}
+              />
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="block text-xs mb-1" style={{ color: '#94a3b8' }}>Parentesco *</label>
-                <input type="text" placeholder="Ej: Madre" value={c.parentesco} onChange={e => set(i, 'parentesco', e.target.value)} style={inputSt} className={inputCls} />
+                <label
+                  className="block text-xs mb-1"
+                  style={{ color: "#94a3b8" }}
+                >
+                  Parentesco *
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ej: Madre"
+                  value={c.parentesco}
+                  onChange={(e) => set(i, "parentesco", e.target.value)}
+                  style={inputSt}
+                  className={inputCls}
+                />
               </div>
               <div>
-                <label className="block text-xs mb-1" style={{ color: '#94a3b8' }}>Dirección</label>
-                <input type="text" placeholder="Opcional" value={c.direccion ?? ''} onChange={e => set(i, 'direccion', e.target.value)} style={inputSt} className={inputCls} />
+                <label
+                  className="block text-xs mb-1"
+                  style={{ color: "#94a3b8" }}
+                >
+                  Dirección
+                </label>
+                <input
+                  type="text"
+                  placeholder="Opcional"
+                  value={c.direccion ?? ""}
+                  onChange={(e) => set(i, "direccion", e.target.value)}
+                  style={inputSt}
+                  className={inputCls}
+                />
               </div>
             </div>
           </div>
         </div>
       ))}
-      <BtnAgregar onClick={() => setLista(p => [...p, { nombreCompleto: '', parentesco: '' }])} label="Agregar contacto" />
+      <BtnAgregar
+        onClick={() =>
+          setLista((p) => [...p, { nombreCompleto: "", parentesco: "" }])
+        }
+        label="Agregar contacto"
+      />
     </ModalShell>
-  )
+  );
 }

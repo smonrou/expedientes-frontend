@@ -1,6 +1,6 @@
-import { Outlet } from 'react-router-dom'
-import Sidebar from './Sidebar'
-import Topbar from './Topbar'
+import { Outlet } from "react-router-dom";
+import Sidebar from "./Sidebar";
+import Topbar from "./Topbar";
 
 /**
  * Layout principal de la aplicación.
@@ -8,7 +8,10 @@ import Topbar from './Topbar'
  */
 export default function AppLayout() {
   return (
-    <div className="flex h-screen overflow-hidden" style={{ background: '#020617' }}>
+    <div
+      className="flex h-screen overflow-hidden"
+      style={{ background: "#020617" }}
+    >
       <Sidebar />
       <div className="flex flex-col flex-1 overflow-hidden">
         <Topbar />
@@ -17,5 +20,5 @@ export default function AppLayout() {
         </main>
       </div>
     </div>
-  )
+  );
 }

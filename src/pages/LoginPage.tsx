@@ -78,9 +78,11 @@ export default function LoginPage() {
             <div className="flex justify-center mb-3">
               <div
                 className="rounded-xl p-3"
-                style={{ background: 'rgba(244,233,205,0.1)' }}
+                style={{ background: "rgba(244,233,205,0.1)" }}
               >
-                <GraduationCap style={{ color: '#F4E9CD', width: 28, height: 28 }} />
+                <GraduationCap
+                  style={{ color: "#F4E9CD", width: 28, height: 28 }}
+                />
               </div>
             </div>
             <h1 className="text-xl font-bold" style={{ color: "#f1f5f9" }}>
