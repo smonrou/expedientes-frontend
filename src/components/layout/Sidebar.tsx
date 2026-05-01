@@ -1,6 +1,5 @@
 import { NavLink } from "react-router-dom";
 import {
-  LayoutDashboard,
   Users,
   FileText,
   Bell,
@@ -20,12 +19,6 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  {
-    label: "Dashboard",
-    path: "/dashboard",
-    icon: <LayoutDashboard size={15} />,
-    roles: ["ADMIN", "COORDINADOR", "ESTUDIANTE"],
-  },
   {
     label: "Estudiantes",
     path: "/estudiantes",

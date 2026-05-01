@@ -71,6 +71,30 @@ export default function EstudianteDetallePage() {
           >
             <ArrowLeft size={15} style={{ color: '#94a3b8' }} />
           </button>
+
+          {/* Avatar */}
+          <div
+            className="flex items-center justify-center rounded-full overflow-hidden shrink-0"
+            style={{ width: 128, height: 128, background: 'rgba(244,233,205,0.1)', border: '1px solid #1e293b' }}
+          >
+            {est.rutaFotografia ? (
+              <img
+                src={est.rutaFotografia}
+                alt={`${est.nombres} ${est.apellidos}`}
+                className="w-full h-full object-cover"
+                onError={e => {
+                  const el = e.currentTarget
+                  el.style.display = 'none'
+                  el.parentElement!.innerHTML = `<span style="color:#F4E9CD;font-size:13px;font-weight:600">${est.nombres[0]}${est.apellidos[0]}</span>`
+                }}
+              />
+            ) : (
+              <span style={{ color: '#F4E9CD', fontSize: 20, fontWeight: 600 }}>
+                {est.nombres[0]}{est.apellidos[0]}
+              </span>
+            )}
+          </div>
+
           <div>
             <h1 className="text-lg font-semibold" style={{ color: '#F4E9CD' }}>
               {est.nombres} {est.apellidos}

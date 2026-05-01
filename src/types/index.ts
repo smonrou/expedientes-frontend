@@ -205,6 +205,7 @@ export interface EstudianteUpdateRequest {
   pensumCerrado: boolean;
   /** ISO 8601 — LocalDate */
   fechaCierrePensum?: string;
+  rutaFotografia?: string;
 }
 
 export interface EstudianteResumenResponse {
