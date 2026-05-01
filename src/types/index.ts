@@ -191,6 +191,7 @@ export interface EstudianteResponse {
   correoPersonal?: string;
   anioIngreso: number;
   inscrito: boolean;
+  cui: string;
   pensumCerrado: boolean;
   fechaCierrePensum?: string;
   direccion: string;

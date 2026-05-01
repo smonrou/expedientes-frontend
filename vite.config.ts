@@ -1,21 +1,50 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
-import path from 'path'
-
-
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
+import path from "path";
 
 export default defineConfig({
-  plugins: [
-    react(),
-    tailwindcss(),
-  ],
+  plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      "@": path.resolve(__dirname, "./src"),
     },
   },
   server: {
     port: 5173,
   },
-})
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes("node_modules")) {
+            if (
+              id.includes("react") ||
+              id.includes("react-dom") ||
+              id.includes("react-router")
+            ) {
+              return "vendor-react";
+            }
+            if (id.includes("@tanstack")) return "vendor-query";
+            if (
+              id.includes("react-hook-form") ||
+              id.includes("@hookform") ||
+              id.includes("zod")
+            ) {
+              return "vendor-form";
+            }
+            if (id.includes("recharts")) return "vendor-charts";
+            if (
+              id.includes("lucide") ||
+              id.includes("sonner") ||
+              id.includes("date-fns")
+            ) {
+              return "vendor-ui";
+            }
+            return "vendor-misc";
+          }
+        },
+      },
+    },
+  },
+});
