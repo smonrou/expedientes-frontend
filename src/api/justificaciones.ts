@@ -1,20 +1,22 @@
-import api from './axios'
+import api from "./axios";
 import type {
   JustificacionResumenResponse,
   JustificacionResponse,
   JustificacionRequest,
   CambioEstadoRequest,
   EstadoJustificacion,
-} from '@/types'
+} from "@/types";
 
 /**
  * Obtiene las justificaciones de un estudiante específico.
  */
-export async function listarPorEstudiante(estudianteId: number): Promise<JustificacionResumenResponse[]> {
+export async function listarPorEstudiante(
+  estudianteId: number,
+): Promise<JustificacionResumenResponse[]> {
   const { data } = await api.get<JustificacionResumenResponse[]>(
-    `/justificaciones/estudiante/${estudianteId}`
-  )
-  return data
+    `/justificaciones/estudiante/${estudianteId}`,
+  );
+  return data;
 }
 
 /**
@@ -22,21 +24,25 @@ export async function listarPorEstudiante(estudianteId: number): Promise<Justifi
  */
 export async function listarPorCarrera(
   carreraId: number,
-  estado?: EstadoJustificacion
+  estado?: EstadoJustificacion,
 ): Promise<JustificacionResumenResponse[]> {
   const { data } = await api.get<JustificacionResumenResponse[]>(
     `/justificaciones/carrera/${carreraId}`,
-    { params: estado ? { estado } : {} }
-  )
-  return data
+    { params: estado ? { estado } : {} },
+  );
+  return data;
 }
 
 /**
  * Obtiene el detalle completo de una justificación.
  */
-export async function obtenerJustificacion(id: number): Promise<JustificacionResponse> {
-  const { data } = await api.get<JustificacionResponse>(`/justificaciones/${id}`)
-  return data
+export async function obtenerJustificacion(
+  id: number,
+): Promise<JustificacionResponse> {
+  const { data } = await api.get<JustificacionResponse>(
+    `/justificaciones/${id}`,
+  );
+  return data;
 }
 
 /**
@@ -44,13 +50,13 @@ export async function obtenerJustificacion(id: number): Promise<JustificacionRes
  */
 export async function crearJustificacion(
   estudianteId: number,
-  dto: JustificacionRequest
+  dto: JustificacionRequest,
 ): Promise<JustificacionResponse> {
   const { data } = await api.post<JustificacionResponse>(
     `/justificaciones/estudiante/${estudianteId}`,
-    dto
-  )
-  return data
+    dto,
+  );
+  return data;
 }
 
 /**
@@ -59,14 +65,14 @@ export async function crearJustificacion(
 export async function cambiarEstado(
   id: number,
   revisadoPorId: number,
-  dto: CambioEstadoRequest
+  dto: CambioEstadoRequest,
 ): Promise<JustificacionResponse> {
   const { data } = await api.patch<JustificacionResponse>(
     `/justificaciones/${id}/estado`,
     dto,
-    { params: { revisadoPorId } }
-  )
-  return data
+    { params: { revisadoPorId } },
+  );
+  return data;
 }
 
 /**
@@ -74,16 +80,16 @@ export async function cambiarEstado(
  */
 export async function subirDocumento(
   justificacionId: number,
-  archivo: File
+  archivo: File,
 ): Promise<JustificacionResponse> {
-  const formData = new FormData()
-  formData.append('archivo', archivo)
+  const formData = new FormData();
+  formData.append("archivo", archivo);
   const { data } = await api.post<JustificacionResponse>(
     `/justificaciones/${justificacionId}/documentos`,
     formData,
-    { headers: { 'Content-Type': 'multipart/form-data' } }
-  )
-  return data
+    { headers: { "Content-Type": "multipart/form-data" } },
+  );
+  return data;
 }
 
 /**
@@ -91,18 +97,18 @@ export async function subirDocumento(
  */
 export async function descargarDocumento(
   documentoId: number,
-  nombreOriginal: string
+  nombreOriginal: string,
 ): Promise<void> {
   const response = await api.get(
     `/justificaciones/documentos/${documentoId}/descargar`,
-    { responseType: 'blob' }
-  )
-  const url = URL.createObjectURL(response.data)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = nombreOriginal
-  a.click()
-  URL.revokeObjectURL(url)
+    { responseType: "blob" },
+  );
+  const url = URL.createObjectURL(response.data);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = nombreOriginal;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 /**
@@ -110,7 +116,9 @@ export async function descargarDocumento(
  */
 export async function eliminarDocumento(
   justificacionId: number,
-  documentoId: number
+  documentoId: number,
 ): Promise<void> {
-  await api.delete(`/justificaciones/${justificacionId}/documentos/${documentoId}`)
+  await api.delete(
+    `/justificaciones/${justificacionId}/documentos/${documentoId}`,
+  );
 }
