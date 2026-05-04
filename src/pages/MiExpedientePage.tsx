@@ -10,11 +10,14 @@ import {
   actualizarContactosEmergencia,
 } from "@/api/estudiantes";
 import { listarCatalogo } from "@/api/catalogos";
+import { listarActividades } from "@/api/actividades";
 import { useAuth } from "@/hooks/useAuth";
+import ModalActividades from "@/components/estudiantes/ModalActividades";
 import type {
   AlergiaRequest,
   DiscapacidadRequest,
   ContactoEmergenciaRequest,
+  ActividadResponse,
 } from "@/types";
 
 // ─── Tipos de input ───────────────────────────────────────────────────────────
@@ -36,6 +39,31 @@ const inputSt: React.CSSProperties = {
 const inputCls =
   "w-full px-3 py-2 rounded-lg text-sm outline-none focus:ring-1";
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function formatFechaActividad(fecha: string): string {
+  try {
+    const [year, month, day] = fecha.split("-");
+    const meses = [
+      "ene",
+      "feb",
+      "mar",
+      "abr",
+      "may",
+      "jun",
+      "jul",
+      "ago",
+      "sep",
+      "oct",
+      "nov",
+      "dic",
+    ];
+    return `${day} ${meses[Number(month) - 1]} ${year}`;
+  } catch {
+    return fecha;
+  }
+}
+
 // ─── Página principal ─────────────────────────────────────────────────────────
 
 /**
@@ -52,6 +80,7 @@ export default function MiExpedientePage() {
     | "alergias"
     | "discapacidades"
     | "contactos"
+    | "actividades"
     | null;
   const [modal, setModal] = useState<ModalId>(null);
 
@@ -59,6 +88,12 @@ export default function MiExpedientePage() {
     queryKey: ["mi-expediente", sesion?.usuarioId],
     queryFn: () => obtenerMiExpediente(sesion!.usuarioId),
     enabled: !!sesion?.usuarioId,
+  });
+
+  const { data: actividades = [] } = useQuery<ActividadResponse[]>({
+    queryKey: ["actividades", est?.id],
+    queryFn: () => listarActividades(est!.id),
+    enabled: !!est?.id,
   });
 
   if (isLoading) {
@@ -77,7 +112,6 @@ export default function MiExpedientePage() {
     <div className="space-y-6 max-w-4xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between">
-        {" "}
         <div className="flex items-center gap-3">
           {/* Avatar */}
           <div
@@ -252,6 +286,58 @@ export default function MiExpedientePage() {
         )}
       </Seccion>
 
+      {/* Actividades extracurriculares — ancho completo, editable */}
+      <Seccion
+        titulo="Actividades extracurriculares"
+        onEditar={() => setModal("actividades")}
+      >
+        {actividades.length === 0 ? (
+          <p className="text-xs" style={{ color: "#475569" }}>
+            Sin actividades extracurriculares registradas.
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {actividades.map((act) => (
+              <div
+                key={act.id}
+                className="rounded-lg p-3 space-y-1"
+                style={{ background: "#1e293b", border: "1px solid #334155" }}
+              >
+                <p
+                  className="text-sm font-medium truncate"
+                  style={{ color: "#cbd5e1" }}
+                >
+                  {act.nombre}
+                </p>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span
+                    className="px-1.5 py-0.5 rounded text-xs"
+                    style={{
+                      background: "rgba(244,233,205,0.08)",
+                      color: "#F4E9CD",
+                    }}
+                  >
+                    {act.tipoActividadNombre}
+                  </span>
+                  {act.institucion && (
+                    <span className="text-xs" style={{ color: "#94a3b8" }}>
+                      {act.institucion}
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs" style={{ color: "#475569" }}>
+                  {formatFechaActividad(act.fechaInicio)}
+                  {" → "}
+                  {act.fechaFin
+                    ? formatFechaActividad(act.fechaFin)
+                    : "En curso"}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+      </Seccion>
+
       {/* ── Modales ── */}
       {modal === "telefonos" && (
         <ModalTelefonos
@@ -300,6 +386,14 @@ export default function MiExpedientePage() {
             parentesco: c.parentesco,
             direccion: c.direccion ?? undefined,
           }))}
+          onClose={() => setModal(null)}
+        />
+      )}
+      {modal === "actividades" && (
+        <ModalActividades
+          estudianteId={est.id}
+          puedeEditar={true}
+          queryKey={["actividades", est.id]}
           onClose={() => setModal(null)}
         />
       )}

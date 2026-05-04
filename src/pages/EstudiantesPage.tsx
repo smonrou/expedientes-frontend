@@ -22,16 +22,23 @@ export default function EstudiantesPage() {
     queryFn: listarCarreras,
   });
 
+  const hayFiltro = termino.trim() !== "" || carreraId !== undefined;
+
   const { data: estudiantes = [], isLoading } = useQuery({
     queryKey: ["estudiantes", busquedaActiva, termino, carreraId],
     queryFn: () =>
-      busquedaActiva && termino.trim()
+      hayFiltro
         ? buscarEstudiantes(termino.trim(), carreraId)
         : listarEstudiantes(),
   });
 
   function handleBuscar() {
-    if (termino.trim()) setBusquedaActiva(true);
+    if (termino.trim() || carreraId !== undefined) setBusquedaActiva(true);
+  }
+
+  function handleCarreraChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    setCarreraId(e.target.value ? Number(e.target.value) : undefined);
+    setBusquedaActiva(true);
   }
 
   function handleLimpiar() {
@@ -99,9 +106,7 @@ export default function EstudiantesPage() {
         {/* Filtro carrera */}
         <select
           value={carreraId ?? ""}
-          onChange={(e) =>
-            setCarreraId(e.target.value ? Number(e.target.value) : undefined)
-          }
+          onChange={handleCarreraChange}
           className="px-3 py-2.5 rounded-lg text-sm outline-none transition focus:ring-1"
           style={{
             background: "#1e293b",
