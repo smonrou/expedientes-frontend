@@ -12,13 +12,16 @@ import {
   actualizarContactosEmergencia,
 } from "@/api/estudiantes";
 import { listarCatalogo } from "@/api/catalogos";
+import { listarActividades } from "@/api/actividades";
 import { useAuth } from "@/hooks/useAuth";
+import ModalActividades from "@/components/estudiantes/ModalActividades";
 
 // ─── Tipos de input ───────────────────────────────────────────────────────────
 import type {
   AlergiaRequest,
   DiscapacidadRequest,
   ContactoEmergenciaRequest,
+  ActividadResponse,
 } from "@/types";
 
 type TipoTelefono = "CASA" | "CELULAR" | "TRABAJO";
@@ -40,6 +43,31 @@ const inputSt: React.CSSProperties = {
 const inputCls =
   "w-full px-3 py-2 rounded-lg text-sm outline-none focus:ring-1";
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function formatFechaActividad(fecha: string): string {
+  try {
+    const [year, month, day] = fecha.split("-");
+    const meses = [
+      "ene",
+      "feb",
+      "mar",
+      "abr",
+      "may",
+      "jun",
+      "jul",
+      "ago",
+      "sep",
+      "oct",
+      "nov",
+      "dic",
+    ];
+    return `${day} ${meses[Number(month) - 1]} ${year}`;
+  } catch {
+    return fecha;
+  }
+}
+
 // ─── Página principal ─────────────────────────────────────────────────────────
 
 /**
@@ -57,6 +85,7 @@ export default function EstudianteDetallePage() {
     | "alergias"
     | "discapacidades"
     | "contactos"
+    | "actividades"
     | null;
   const [modal, setModal] = useState<ModalId>(null);
 
@@ -65,6 +94,12 @@ export default function EstudianteDetallePage() {
   const { data: est, isLoading } = useQuery({
     queryKey: ["estudiante", id],
     queryFn: () => obtenerEstudiante(Number(id)),
+    enabled: !!id,
+  });
+
+  const { data: actividades = [] } = useQuery<ActividadResponse[]>({
+    queryKey: ["actividades", Number(id)],
+    queryFn: () => listarActividades(Number(id)),
     enabled: !!id,
   });
 
@@ -92,36 +127,6 @@ export default function EstudianteDetallePage() {
           >
             <ArrowLeft size={15} style={{ color: "#94a3b8" }} />
           </button>
-
-          {/* Avatar */}
-          <div
-            className="flex items-center justify-center rounded-full overflow-hidden shrink-0"
-            style={{
-              width: 128,
-              height: 128,
-              background: "rgba(244,233,205,0.1)",
-              border: "1px solid #1e293b",
-            }}
-          >
-            {est.rutaFotografia ? (
-              <img
-                src={est.rutaFotografia}
-                alt={`${est.nombres} ${est.apellidos}`}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  const el = e.currentTarget;
-                  el.style.display = "none";
-                  el.parentElement!.innerHTML = `<span style="color:#F4E9CD;font-size:64px;font-weight:600">${est.nombres[0]}${est.apellidos[0]}</span>`;
-                }}
-              />
-            ) : (
-              <span style={{ color: "#F4E9CD", fontSize: 20, fontWeight: 600 }}>
-                {est.nombres[0]}
-                {est.apellidos[0]}
-              </span>
-            )}
-          </div>
-
           <div>
             <h1 className="text-lg font-semibold" style={{ color: "#F4E9CD" }}>
               {est.nombres} {est.apellidos}
@@ -172,7 +177,7 @@ export default function EstudianteDetallePage() {
           )}
         </Seccion>
 
-        {/* Contacto — con botón editar teléfonos */}
+        {/* Contacto */}
         <Seccion
           titulo="Contacto"
           onEditar={puedeEditar ? () => setModal("telefonos") : undefined}
@@ -195,7 +200,7 @@ export default function EstudianteDetallePage() {
           )}
         </Seccion>
 
-        {/* Información médica — con botón editar */}
+        {/* Información médica */}
         <Seccion
           titulo="Información médica"
           onEditar={puedeEditar ? () => setModal("condiciones") : undefined}
@@ -235,7 +240,6 @@ export default function EstudianteDetallePage() {
               ))}
             </>
           )}
-          {/* Botones secundarios para alergias y discapacidades */}
           {puedeEditar && (
             <div className="flex gap-2 pt-1">
               <BtnSecundario onClick={() => setModal("alergias")}>
@@ -249,7 +253,7 @@ export default function EstudianteDetallePage() {
         </Seccion>
       </div>
 
-      {/* Contactos de emergencia — ancho completo, con botón editar */}
+      {/* Contactos de emergencia */}
       <Seccion
         titulo="Contactos de emergencia"
         onEditar={puedeEditar ? () => setModal("contactos") : undefined}
@@ -277,6 +281,58 @@ export default function EstudianteDetallePage() {
                     {c.direccion}
                   </p>
                 )}
+              </div>
+            ))}
+          </div>
+        )}
+      </Seccion>
+
+      {/* Actividades extracurriculares */}
+      <Seccion
+        titulo="Actividades extracurriculares"
+        onEditar={puedeEditar ? () => setModal("actividades") : undefined}
+      >
+        {actividades.length === 0 ? (
+          <p className="text-xs" style={{ color: "#475569" }}>
+            Sin actividades extracurriculares registradas.
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {actividades.map((act) => (
+              <div
+                key={act.id}
+                className="rounded-lg p-3 space-y-1"
+                style={{ background: "#1e293b", border: "1px solid #334155" }}
+              >
+                <p
+                  className="text-sm font-medium truncate"
+                  style={{ color: "#cbd5e1" }}
+                >
+                  {act.nombre}
+                </p>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span
+                    className="px-1.5 py-0.5 rounded text-xs"
+                    style={{
+                      background: "rgba(244,233,205,0.08)",
+                      color: "#F4E9CD",
+                    }}
+                  >
+                    {act.tipoActividadNombre}
+                  </span>
+                  {act.institucion && (
+                    <span className="text-xs" style={{ color: "#94a3b8" }}>
+                      {act.institucion}
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs" style={{ color: "#475569" }}>
+                  {formatFechaActividad(act.fechaInicio)}
+                  {" → "}
+                  {act.fechaFin
+                    ? formatFechaActividad(act.fechaFin)
+                    : "En curso"}
+                </p>
               </div>
             ))}
           </div>
@@ -331,6 +387,14 @@ export default function EstudianteDetallePage() {
             parentesco: c.parentesco,
             direccion: c.direccion ?? undefined,
           }))}
+          onClose={() => setModal(null)}
+        />
+      )}
+      {modal === "actividades" && (
+        <ModalActividades
+          estudianteId={Number(id)}
+          puedeEditar={puedeEditar}
+          queryKey={["actividades", Number(id)]}
           onClose={() => setModal(null)}
         />
       )}
@@ -462,7 +526,6 @@ function ModalShell({
         style={{ background: "#1e293b", border: "1px solid #334155" }}
         className="w-full max-w-lg rounded-2xl overflow-hidden"
       >
-        {/* Header */}
         <div
           style={{ background: "#0f172a", borderBottom: "1px solid #1e293b" }}
           className="px-5 py-4 flex items-center justify-between"
@@ -478,13 +541,9 @@ function ModalShell({
             ×
           </button>
         </div>
-
-        {/* Body */}
         <div className="p-5 space-y-3 max-h-104 overflow-y-auto">
           {children}
         </div>
-
-        {/* Footer */}
         <div
           style={{ borderTop: "1px solid #1e293b" }}
           className="px-5 py-4 flex justify-end gap-3"
@@ -516,8 +575,6 @@ function ModalShell({
     </div>
   );
 }
-
-// ─── Botón "agregar ítem" reutilizable ────────────────────────────────────────
 
 function BtnAgregar({
   onClick,
