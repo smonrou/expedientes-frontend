@@ -1,6 +1,7 @@
 # Project Tree
 
 ```markdown
+
 expedientes-frontend
 ├─ components.json
 ├─ eslint.config.js
@@ -13,6 +14,7 @@ expedientes-frontend
 ├─ README.md
 ├─ src
 │  ├─ api
+│  │  ├─ actividades.ts
 │  │  ├─ auth.ts
 │  │  ├─ axios.ts
 │  │  ├─ catalogos.ts
@@ -22,10 +24,6 @@ expedientes-frontend
 │  │  └─ usuarios.ts
 │  ├─ App.css
 │  ├─ App.tsx
-│  ├─ assets
-│  │  ├─ hero.png
-│  │  ├─ react.svg
-│  │  └─ vite.svg
 │  ├─ components
 │  │  ├─ catalogos
 │  │  │  ├─ ModalCarerra.tsx
@@ -33,6 +31,7 @@ expedientes-frontend
 │  │  │  ├─ TablaCarreras.tsx
 │  │  │  └─ TablaCatalogo.tsx
 │  │  ├─ estudiantes
+│  │  │  ├─ ModalActividades.tsx
 │  │  │  ├─ ModalAlergias.tsx
 │  │  │  ├─ ModalCondicionesMedicas.tsx
 │  │  │  ├─ ModalContactosEmergencia.tsx
@@ -42,7 +41,6 @@ expedientes-frontend
 │  │  │  └─ BadgeEstado.tsx
 │  │  ├─ layout
 │  │  │  ├─ AppLayout.tsx
-│  │  │  ├─ Navbar.tsx
 │  │  │  ├─ Sidebar.tsx
 │  │  │  └─ Topbar.tsx
 │  │  ├─ ui
